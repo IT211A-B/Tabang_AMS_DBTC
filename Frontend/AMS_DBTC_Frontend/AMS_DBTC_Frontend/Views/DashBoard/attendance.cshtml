@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "Daily Attendance";
+    ViewData["Page"] = "att";
+    ViewData["PageTitle"] = "Daily Attendance";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="attPage">
+
+            {{!-- Mini Stats --}}
+            <div class="att-minis">
+                <div class="att-mini">
+                    <div class="am-l">Total</div>
+                    <div class="am-v" style="color:var(--blue)" id="amT">0</div>
+                </div>
+                <div class="att-mini">
+                    <div class="am-l">Present</div>
+                    <div class="am-v" style="color:var(--green)" id="amP">0</div>
+                </div>
+                <div class="att-mini">
+                    <div class="am-l">Absent</div>
+                    <div class="am-v" style="color:var(--red)" id="amA">0</div>
+                </div>
+                <div class="att-mini">
+                    <div class="am-l">Late</div>
+                    <div class="am-v" style="color:var(--orange)" id="amL">0</div>
+                </div>
+            </div>
+
+            {{!-- Control Bar --}}
+            <div class="ctrl">
+                <div>
+                    <h2>Attendance Sheet</h2>
+                    <p>P = Present &nbsp;|&nbsp; A = Absent &nbsp;|&nbsp; L = Late</p>
+                </div>
+                <div class="ctrl-r">
+                    <input class="srch" type="text" placeholder="Search student…"
+                           id="attSearch"
+                           oninput="AttController.filter(this.value)" />
+                    <button class="btn btn-primary btn-sm"
+                            onclick="AttController.markAllPresent()">
+                        Mark All Present
+                    </button>
+                </div>
+            </div>
+
+            {{!-- Table --}}
+            <div class="tbl">
+                <div class="tbl-h tbl-grid">
+                    <div class="th">#</div>
+                    <div class="th">Student</div>
+                    <div class="th">Status</div>
+                    <div class="th">Mark</div>
+                    <div class="th">Remarks</div>
+                </div>
+                <div id="attRows"></div>
+            </div>
+
+        </div>{{!-- /page-wrap --}}
+
+        {{!-- Bottom Submit Bar --}}
+        <div class="btm-bar">
+            <div class="btm-info">
+                <strong id="attMarked">0</strong> of
+                <strong id="attTotal">0</strong> students marked today
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-outline btn-sm">Save Draft</button>
+                <button class="btn btn-success btn-sm"
+                        onclick="AttController.submit()">
+                    Submit Attendance
+                </button>
+            </div>
+        </div>
+
+    </div>{{!-- /main-area --}}
+</div>{{!-- /app-shell --}}

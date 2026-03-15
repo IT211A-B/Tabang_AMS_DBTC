@@ -1,0 +1,244 @@
+﻿/* ── Fullscreen overlay ── */
+#loadingScreen {
+    position: fixed;
+    inset: 0;
+    background: #1e3a6e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.45s ease;
+    overflow: hidden;
+}
+
+    /* ── Hide class (triggered by jQuery in _Layout) ── */
+    #loadingScreen.hide {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+/* ── Floating background circles ── */
+.ls-circles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.ls-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(58, 111, 216, 0.07);
+    animation: lsFloat 8s ease-in-out infinite;
+}
+
+    .ls-circle:nth-child(1) {
+        width: 320px;
+        height: 320px;
+        top: -90px;
+        left: -90px;
+        animation-delay: 0s;
+        animation-duration: 9s;
+    }
+
+    .ls-circle:nth-child(2) {
+        width: 210px;
+        height: 210px;
+        top: 15%;
+        right: -70px;
+        animation-delay: 1.5s;
+        animation-duration: 7s;
+    }
+
+    .ls-circle:nth-child(3) {
+        width: 160px;
+        height: 160px;
+        bottom: 8%;
+        left: 8%;
+        animation-delay: 3s;
+        animation-duration: 11s;
+    }
+
+    .ls-circle:nth-child(4) {
+        width: 260px;
+        height: 260px;
+        bottom: -70px;
+        right: 4%;
+        animation-delay: 0.8s;
+        animation-duration: 8s;
+    }
+
+@keyframes lsFloat {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translateY(-18px) scale(1.04);
+        opacity: 1;
+    }
+}
+
+/* ── Card (centered content) ── */
+.ls-card {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 48px 60px;
+    backdrop-filter: blur(12px);
+    min-width: 340px;
+    animation: lsCardIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes lsCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* ── School logo icon ── */
+.ls-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    animation: lsPulse 2.5s ease-in-out infinite;
+}
+
+    .ls-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* Fallback emoji icon (if no img used) */
+    .ls-icon span {
+        font-size: 36px;
+        line-height: 1;
+    }
+
+@keyframes lsPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+}
+
+/* ── App name ── */
+.ls-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+}
+
+/* ── Tagline ── */
+.ls-tagline {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.38);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+/* ── Bouncing dots ── */
+.ls-dots {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.ls-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    animation: lsDotBounce 1.2s ease-in-out infinite;
+}
+
+    .ls-dot:nth-child(1) {
+        background: #3a6fd8;
+        animation-delay: 0s;
+    }
+
+    .ls-dot:nth-child(2) {
+        background: #5b8de8;
+        animation-delay: 0.18s;
+    }
+
+    .ls-dot:nth-child(3) {
+        background: #7aabe0;
+        animation-delay: 0.36s;
+    }
+
+@keyframes lsDotBounce {
+    0%, 80%, 100% {
+        transform: scale(0.7);
+        opacity: 0.4;
+    }
+
+    40% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* ── Status text ── */
+.ls-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    min-height: 16px;
+    transition: opacity 0.3s ease;
+    font-family: 'Nunito Sans', sans-serif;
+}
+.ls-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3a6fd8, #7aabe0);
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Percentage ── */
+.ls-pct {
+    margin-top: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.06em;
+}

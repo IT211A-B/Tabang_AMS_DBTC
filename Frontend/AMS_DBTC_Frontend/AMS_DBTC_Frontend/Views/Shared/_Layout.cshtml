@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — EduAttend AMS</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/root.css" />
+    <link rel="stylesheet" href="~/css/loading.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <link rel="stylesheet" href="~/css/pages.css" />
+
+    <script src="~/lib/jquery/jquery.min.js"></script>
+</head>
+<body>
+
+    @* ── Loading Screen Overlay ── *@
+    <div id="loadingScreen">
+
+        @* Floating background circles *@
+        <div class="ls-circles">
+            <div class="ls-circle"></div>
+            <div class="ls-circle"></div>
+            <div class="ls-circle"></div>
+            <div class="ls-circle"></div>
+        </div>
+
+
+        <div class="ls-card">
+            <div class="ls-icon">
+                <img src="~/css/assets/donboscologo.jpg" alt="School Logo"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+            </div>
+            <div class="ls-name">DBTC Attendance</div>
+            <div class="ls-tagline">Attendance Management System</div>
+
+            @* Bouncing dots *@
+            <div class="ls-dots">
+                <div class="ls-dot"></div>
+                <div class="ls-dot"></div>
+                <div class="ls-dot"></div>
+            </div>
+
+            @* Status message *@
+            <div class="ls-text" id="lsStatus">Loading, please wait…</div>
+
+            @* Progress bar *@
+            <div class="ls-bar-track">
+                <div class="ls-bar-fill" id="lsBar"></div>
+            </div>
+
+            @* Percentage *@
+            <div class="ls-pct" id="lsPct">0%</div>
+
+        </div>
+    </div>
+
+    @* ── Toast notification ── *@
+    <div id="toast"></div>
+
+    @* ── Page content ── *@
+    @RenderBody()
+
+    @* ── JS: Models & Store ── *@
+    <script src="~/js/models.js"></script>
+    <script src="~/js/store.js"></script>
+    <script src="~/js/helpers.js"></script>
+
+    @* ── JS: Controllers ── *@
+    <script src="~/js/authController.js"></script>
+    <script src="~/js/appController.js"></script>
+    <script src="~/js/dashController.js"></script>
+    <script src="~/js/attController.js"></script>
+    <script src="~/js/pageControllers.js"></script>
+
+    @* ── Page-specific scripts ── *@
+    @await RenderSectionAsync("Scripts", required: false)
+
+    @* ── Loading screen animation + hide logic ── *@
+    <script>
+            // Fade out then remove the loading screen
+            setTimeout(function () {
+                $('#loadingScreen').addClass('hide');
+                setTimeout(function () {
+                    $('#loadingScreen').remove();
+                }, 450);
+            }, 750);
+
+        });
+    </script>
+
+</body>
+</html>
