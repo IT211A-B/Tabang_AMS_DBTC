@@ -1,0 +1,96 @@
+﻿@{
+    ViewData["Title"] = "Students";
+    ViewData["Page"] = "stu";
+    ViewData["PageTitle"] = "Students";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="stuPage">
+
+            {{!-- Control Bar --}}
+            <div class="ctrl">
+                <div>
+                    <h2>Student Directory</h2>
+                    <p>All enrolled students in your section</p>
+                </div>
+                <div class="ctrl-r">
+                    <input class="srch" type="text" placeholder="Search student…"
+                           oninput="StuController.filter(this.value)" />
+                    <button class="btn btn-primary btn-sm"
+                            onclick="StuController.openAdd()">
+                        + Add Student
+                    </button>
+                </div>
+            </div>
+
+            {{!-- Student Grid --}}
+            <div class="stu-grid" id="stuGrid"></div>
+
+        </div>{{!-- /page-wrap --}}
+
+    </div>{{!-- /main-area --}}
+</div>{{!-- /app-shell --}}
+
+{{!-- View Student Modal --}}
+<div class="overlay" id="viewStuOverlay">
+    <div class="modal">
+        <h3 id="vName">Student Name</h3>
+        <div class="md" id="vId">ID: —</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;">
+            <div style="text-align:center;background:var(--g50);border-radius:6px;padding:10px;">
+                <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:var(--green)" id="vP">0</div>
+                <div style="font-size:10px;color:var(--g400);font-weight:700;text-transform:uppercase;">Present</div>
+            </div>
+            <div style="text-align:center;background:var(--g50);border-radius:6px;padding:10px;">
+                <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:var(--red)" id="vA">0</div>
+                <div style="font-size:10px;color:var(--g400);font-weight:700;text-transform:uppercase;">Absent</div>
+            </div>
+            <div style="text-align:center;background:var(--g50);border-radius:6px;padding:10px;">
+                <div style="font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;color:var(--orange)" id="vL">0</div>
+                <div style="font-size:10px;color:var(--g400);font-weight:700;text-transform:uppercase;">Late</div>
+            </div>
+        </div>
+        <div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+                <span style="color:var(--g600)">Attendance Rate</span>
+                <strong id="vRate" style="color:var(--green)">—</strong>
+            </div>
+            <div class="rbar"><div class="rfill" id="vRfill" style="width:0%"></div></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-outline btn-sm" onclick="StuController.closeModal('viewStuOverlay')">Close</button>
+        </div>
+    </div>
+</div>
+
+{{!-- Add Student Modal --}}
+<div class="overlay" id="addStuOverlay">
+    <div class="modal">
+        <h3>Add New Student</h3>
+        <div class="md">Fill in the student details below.</div>
+        <div class="fg"><label>First Name</label><input type="text" id="mFn" placeholder="Maria" /></div>
+        <div class="fg"><label>Last Name</label><input type="text" id="mLn" placeholder="Santos" /></div>
+        <div class="fg"><label>Student ID</label><input type="text" id="mId" placeholder="S013" /></div>
+        <div class="modal-foot">
+            <button class="btn btn-outline btn-sm" onclick="StuController.closeModal('addStuOverlay')">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="StuController.add()">Add Student</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            AppController._applyUser();
+            AppController._setDate();
+            StuController.render();
+        });
+    </script>
+}

@@ -82,3 +82,13 @@
 
     </div>{{!-- /main-area --}}
 </div>{{!-- /app-shell --}}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            AppController._applyUser();
+            AppController._setDate();
+            AttController.render();
+        });
+    </script>
+}

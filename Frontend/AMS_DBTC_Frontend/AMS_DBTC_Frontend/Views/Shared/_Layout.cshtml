@@ -18,75 +18,89 @@
 
     @* ── Loading Screen Overlay ── *@
     <div id="loadingScreen">
-
-        @* Floating background circles *@
         <div class="ls-circles">
             <div class="ls-circle"></div>
             <div class="ls-circle"></div>
             <div class="ls-circle"></div>
             <div class="ls-circle"></div>
         </div>
-
-
         <div class="ls-card">
             <div class="ls-icon">
                 <img src="~/css/assets/donboscologo.jpg" alt="School Logo"
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+                     onerror="$(this).hide().next().show();" />
+                <span style="display:none;">📋</span>
             </div>
-            <div class="ls-name">DBTC Attendance</div>
+            <div class="ls-name">EduAttend</div>
             <div class="ls-tagline">Attendance Management System</div>
-
-            @* Bouncing dots *@
             <div class="ls-dots">
                 <div class="ls-dot"></div>
                 <div class="ls-dot"></div>
                 <div class="ls-dot"></div>
             </div>
-
-            @* Status message *@
             <div class="ls-text" id="lsStatus">Loading, please wait…</div>
-
-            @* Progress bar *@
             <div class="ls-bar-track">
                 <div class="ls-bar-fill" id="lsBar"></div>
             </div>
-
-            @* Percentage *@
             <div class="ls-pct" id="lsPct">0%</div>
-
         </div>
     </div>
 
-    @* ── Toast notification ── *@
+    @* ── Toast ── *@
     <div id="toast"></div>
 
-    @* ── Page content ── *@
+    @* ── Page Content ── *@
     @RenderBody()
 
-    @* ── JS: Models & Store ── *@
+    @* ── JS: load order matters — models first, then store, then controllers ── *@
     <script src="~/js/models.js"></script>
     <script src="~/js/store.js"></script>
     <script src="~/js/helpers.js"></script>
-
-    @* ── JS: Controllers ── *@
     <script src="~/js/authController.js"></script>
     <script src="~/js/appController.js"></script>
     <script src="~/js/dashController.js"></script>
     <script src="~/js/attController.js"></script>
     <script src="~/js/pageControllers.js"></script>
+    <script src="~/js/main.js"></script>
 
     @* ── Page-specific scripts ── *@
     @await RenderSectionAsync("Scripts", required: false)
 
-    @* ── Loading screen animation + hide logic ── *@
+    @* ── Loading screen logic — fully jQuery, no vanilla JS ── *@
     <script>
-            // Fade out then remove the loading screen
+        $(document).ready(function () {
+
+            // ── Auth guard: redirect to login if no session ──
+            if (!Session.isLoggedIn()) {
+                window.location.href = '/AMS/Auth/Login';
+                return;
+            }
+
+            // ── Progress bar steps ──
+            var steps = [
+                { at: 100, p: 25,  msg: 'Loading resources...'   },
+                { at: 300, p: 55,  msg: 'Initializing system...' },
+                { at: 500, p: 85,  msg: 'Almost ready...'        },
+                { at: 650, p: 100, msg: 'Done!'                  }
+            ];
+
+            $.each(steps, function (i, step) {
+                setTimeout(function () {
+                    $('#lsBar').css('width', step.p + '%');
+                    $('#lsPct').text(step.p + '%');
+                    $('#lsStatus').text(step.msg);
+                }, step.at);
+            });
+
+            // ── Fade out loading screen then remove it ──
             setTimeout(function () {
                 $('#loadingScreen').addClass('hide');
                 setTimeout(function () {
                     $('#loadingScreen').remove();
                 }, 450);
-            }, 750);
+            }, 800);
+
+            // ── Boot app shell ──
+            AppController.init();
 
         });
     </script>

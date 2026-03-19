@@ -6,20 +6,32 @@ namespace AMS_DBTC_Frontend.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            if (!IsLoggedIn()) return RedirectToLogin();
+            return View("~/Views/AMS/DashBoard/Index.cshtml");
         }
+
         public IActionResult Attendance()
         {
-            return View();
+            if (!IsLoggedIn()) return RedirectToLogin();
+            return View("~/Views/AMS/DashBoard/Attendance.cshtml");
         }
 
         public IActionResult Reports()
         {
-            return View();
+            if (!IsLoggedIn()) return RedirectToLogin();
+            return View("~/Views/AMS/DashBoard/Reports.cshtml");
         }
+
         public IActionResult Settings()
         {
-            return View();
+            if (!IsLoggedIn()) return RedirectToLogin();
+            return View("~/Views/AMS/DashBoard/Settings.cshtml");
         }
+
+        private bool IsLoggedIn() =>
+            HttpContext.Session.GetString("UserEmail") != null;
+
+        private IActionResult RedirectToLogin() =>
+            RedirectToAction("Login", "Auth");
     }
 }

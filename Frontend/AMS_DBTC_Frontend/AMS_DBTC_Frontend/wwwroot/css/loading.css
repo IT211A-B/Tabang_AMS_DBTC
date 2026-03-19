@@ -1,17 +1,21 @@
-﻿/* ── Fullscreen overlay ── */
+﻿/* ── Fullscreen fixed overlay ── */
 #loadingScreen {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: #1e3a6e;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    transition: opacity 0.45s ease;
     overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.45s ease;
 }
 
-    /* ── Hide class (triggered by jQuery in _Layout) ── */
+    /* ── Hide class triggered by jQuery ── */
     #loadingScreen.hide {
         opacity: 0;
         pointer-events: none;
@@ -20,7 +24,10 @@
 /* ── Floating background circles ── */
 .ls-circles {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     pointer-events: none;
     z-index: 0;
 }
@@ -80,7 +87,7 @@
     }
 }
 
-/* ── Card (centered content) ── */
+/* ── Centered card ── */
 .ls-card {
     position: relative;
     z-index: 1;
@@ -109,7 +116,7 @@
     }
 }
 
-/* ── School logo icon ── */
+/* ── School logo circle ── */
 .ls-icon {
     width: 90px;
     height: 90px;
@@ -133,10 +140,10 @@
         display: block;
     }
 
-    /* Fallback emoji icon (if no img used) */
     .ls-icon span {
         font-size: 36px;
         line-height: 1;
+        display: none;
     }
 
 @keyframes lsPulse {
@@ -151,7 +158,7 @@
     }
 }
 
-/* ── App name ── */
+/* ── Brand name ── */
 .ls-name {
     font-family: 'Nunito', sans-serif;
     font-size: 28px;
@@ -222,9 +229,19 @@
     text-transform: uppercase;
     margin-bottom: 14px;
     min-height: 16px;
-    transition: opacity 0.3s ease;
     font-family: 'Nunito Sans', sans-serif;
+    transition: opacity 0.3s ease;
 }
+
+/* ── Progress bar ── */
+.ls-bar-track {
+    width: 220px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
 .ls-bar-fill {
     height: 100%;
     width: 0%;
@@ -233,7 +250,7 @@
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Percentage ── */
+/* ── Percentage label ── */
 .ls-pct {
     margin-top: 10px;
     font-family: 'Nunito', sans-serif;
