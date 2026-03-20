@@ -27,7 +27,7 @@
                             onerror="$(this).hide().next().show();" />
                         <span style="display:none;">📋</span>
                     </div>
-                    <div class="ls-name">EduAttend</div>
+                    <div class="ls-name">DBTC</div>
                     <div class="ls-tagline">Attendance Management System</div>
                     <div class="ls-dots">
                         <div class="ls-dot"></div>

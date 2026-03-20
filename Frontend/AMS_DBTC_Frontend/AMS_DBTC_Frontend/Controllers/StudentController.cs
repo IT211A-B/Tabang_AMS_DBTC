@@ -4,7 +4,6 @@ namespace AMS_DBTC_Frontend.Controllers
 {
     public class StudentController : Controller
     {
-        [HttpGet]
         public IActionResult Index()
         {
             return View("~/Views/AMS/Student/Index.cshtml");
