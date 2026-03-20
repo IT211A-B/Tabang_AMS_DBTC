@@ -1,6 +1,5 @@
 ﻿var AuthController = {
 
-    // ── Login 
     login: function () {
         var email = $.trim($('#liEmail').val());
         var pass = $.trim($('#liPass').val());
@@ -15,7 +14,7 @@
         $.each(USERS, function (i, u) {
             if (u.email === email && u.pass === pass) {
                 user = u;
-                return false; // break $.each
+                return false;
             }
         });
 
@@ -25,13 +24,9 @@
         }
 
         Session.save(user, role);
-        STATE.currentUser = user;
-        STATE.currentRole = role;
-
         window.location.href = '/AMS/DashBoard/Index';
     },
 
-    // ── Register
     register: function () {
         var fn = $.trim($('#regFn').val());
         var ln = $.trim($('#regLn').val());
@@ -62,7 +57,6 @@
         $.each(USERS, function (i, u) {
             if (u.email === email) { exists = true; return false; }
         });
-
         if (exists) {
             AuthController._showErr('#regErr', 'Email already registered.');
             return;
@@ -78,21 +72,14 @@
         USERS.push(newUser);
 
         Session.save(newUser, role);
-        STATE.currentUser = newUser;
-        STATE.currentRole = role;
-
         window.location.href = '/AMS/DashBoard/Index';
     },
 
-    // ── Logout 
     logout: function () {
         Session.clear();
-        STATE.currentUser = null;
-        STATE.attendance = {};
         window.location.href = '/AMS/Auth/Login';
     },
 
-    // ── Auth guard: redirect if not logged in
     requireAuth: function () {
         if (!Session.isLoggedIn()) {
             window.location.href = '/AMS/Auth/Login';
@@ -101,7 +88,6 @@
         return true;
     },
 
-    // ── Private: show error message 
     _showErr: function (selector, msg) {
         $(selector).text(msg).addClass('show');
         setTimeout(function () {

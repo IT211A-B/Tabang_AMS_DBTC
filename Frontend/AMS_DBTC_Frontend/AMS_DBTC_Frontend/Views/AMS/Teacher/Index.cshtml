@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "Teachers";
+    ViewData["Page"] = "tch";
+    ViewData["PageTitle"] = "Teachers";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="tchPage">
+
+            @* Control Bar *@
+            <div class="ctrl">
+                <div>
+                    <h2>Teacher Directory</h2>
+                    <p>Manage teachers, assign courses, and enroll students</p>
+                </div>
+                <div class="ctrl-r">
+                    <input class="srch" type="text"
+                           placeholder="Search teacher..."
+                           oninput="TeacherController.filter(this.value)" />
+                    <button class="btn btn-p btn-sm"
+                            onclick="TeacherController.openAdd()">
+                        + Add Teacher
+                    </button>
+                </div>
+            </div>
+
+            @* Teacher Grid *@
+            <div class="stu-grid" id="teacherGrid"></div>
+
+        </div>
+
+    </div>
+</div>
+
+@* ── Add Teacher Modal ── *@
+<div class="overlay" id="addTeacherOverlay">
+    <div class="modal">
+        <h3>Add New Teacher</h3>
+        <div class="md">Fill in the teacher details below.</div>
+        <div class="fg">
+            <label>Full Name</label>
+            <input type="text" id="tAddName" placeholder="Ms. Maria Santos" />
+        </div>
+        <div class="fg">
+            <label>Email</label>
+            <input type="email" id="tAddEmail" placeholder="m.santos@school.edu.ph" />
+        </div>
+        <div class="fg">
+            <label>Subject / Specialization</label>
+            <input type="text" id="tAddSubject" placeholder="Mathematics" />
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-o btn-sm"
+                    onclick="TeacherController.closeModal('addTeacherOverlay')">
+                Cancel
+            </button>
+            <button class="btn btn-p btn-sm"
+                    onclick="TeacherController.add()">
+                Add Teacher
+            </button>
+        </div>
+    </div>
+</div>
+
+@* ── Edit Teacher Modal ── *@
+<div class="overlay" id="editTeacherOverlay">
+    <div class="modal">
+        <h3>Edit Teacher</h3>
+        <input type="hidden" id="tEditId" />
+        <div class="fg">
+            <label>Full Name</label>
+            <input type="text" id="tEditName" />
+        </div>
+        <div class="fg">
+            <label>Email</label>
+            <input type="email" id="tEditEmail" />
+        </div>
+        <div class="fg">
+            <label>Subject / Specialization</label>
+            <input type="text" id="tEditSubject" />
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-o btn-sm"
+                    onclick="TeacherController.closeModal('editTeacherOverlay')">
+                Cancel
+            </button>
+            <button class="btn btn-p btn-sm"
+                    onclick="TeacherController.saveEdit()">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+@* ── Enroll Student Modal ── *@
+<div class="overlay" id="enrollStudentOverlay">
+    <div class="modal">
+        <h3>Enroll Student</h3>
+        <div class="md">Enrolling into a course handled by <strong id="enrollTeacherName"></strong></div>
+        <input type="hidden" id="enrollTeacherId" />
+        <div class="fg">
+            <label>Select Course</label>
+            <select id="enrollCourseId"></select>
+        </div>
+        <div class="fg">
+            <label>Select Student</label>
+            <select id="enrollStudentId"></select>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-o btn-sm"
+                    onclick="TeacherController.closeModal('enrollStudentOverlay')">
+                Cancel
+            </button>
+            <button class="btn btn-p btn-sm"
+                    onclick="TeacherController.enroll()">
+                Enroll Student
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            AppController.init();
+            TeacherController.render();
+        });
+    </script>
+}

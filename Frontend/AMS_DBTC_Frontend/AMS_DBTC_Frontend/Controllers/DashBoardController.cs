@@ -4,34 +4,28 @@ namespace AMS_DBTC_Frontend.Controllers
 {
     public class DashBoardController : Controller
     {
+        [HttpGet]
         public IActionResult Index()
         {
-            if (!IsLoggedIn()) return RedirectToLogin();
             return View("~/Views/AMS/DashBoard/Index.cshtml");
         }
 
+        [HttpGet]
         public IActionResult Attendance()
         {
-            if (!IsLoggedIn()) return RedirectToLogin();
             return View("~/Views/AMS/DashBoard/Attendance.cshtml");
         }
 
+        [HttpGet]
         public IActionResult Reports()
         {
-            if (!IsLoggedIn()) return RedirectToLogin();
             return View("~/Views/AMS/DashBoard/Reports.cshtml");
         }
 
+        [HttpGet]
         public IActionResult Settings()
         {
-            if (!IsLoggedIn()) return RedirectToLogin();
             return View("~/Views/AMS/DashBoard/Settings.cshtml");
         }
-
-        private bool IsLoggedIn() =>
-            HttpContext.Session.GetString("UserEmail") != null;
-
-        private IActionResult RedirectToLogin() =>
-            RedirectToAction("Login", "Auth");
     }
 }

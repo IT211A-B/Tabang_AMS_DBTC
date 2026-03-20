@@ -4,19 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] — EduAttend AMS</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/root.css" />
     <link rel="stylesheet" href="~/css/loading.css" />
     <link rel="stylesheet" href="~/css/auth.css" />
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <link rel="stylesheet" href="~/css/pages.css" />
-
     <script src="~/lib/jquery/jquery.min.js"></script>
 </head>
 <body>
 
-    @* ── Loading Screen Overlay ── *@
     <div id="loadingScreen">
         <div class="ls-circles">
             <div class="ls-circle"></div>
@@ -45,13 +42,10 @@
         </div>
     </div>
 
-    @* ── Toast ── *@
     <div id="toast"></div>
 
-    @* ── Page Content ── *@
     @RenderBody()
 
-    @* ── JS: load order matters — models first, then store, then controllers ── *@
     <script src="~/js/models.js"></script>
     <script src="~/js/store.js"></script>
     <script src="~/js/helpers.js"></script>
@@ -62,27 +56,24 @@
     <script src="~/js/pageControllers.js"></script>
     <script src="~/js/main.js"></script>
 
-    @* ── Page-specific scripts ── *@
     @await RenderSectionAsync("Scripts", required: false)
 
-    @* ── Loading screen logic — fully jQuery, no vanilla JS ── *@
     <script>
         $(document).ready(function () {
 
-            // ── Auth guard: redirect to login if no session ──
+            // Step 1: Auth guard
             if (!Session.isLoggedIn()) {
                 window.location.href = '/AMS/Auth/Login';
                 return;
             }
 
-            // ── Progress bar steps ──
+            // Step 2: Loading bar animation
             var steps = [
                 { at: 100, p: 25,  msg: 'Loading resources...'   },
                 { at: 300, p: 55,  msg: 'Initializing system...' },
                 { at: 500, p: 85,  msg: 'Almost ready...'        },
                 { at: 650, p: 100, msg: 'Done!'                  }
             ];
-
             $.each(steps, function (i, step) {
                 setTimeout(function () {
                     $('#lsBar').css('width', step.p + '%');
@@ -91,7 +82,7 @@
                 }, step.at);
             });
 
-            // ── Fade out loading screen then remove it ──
+            // Step 3: ALWAYS remove loading screen after 800ms
             setTimeout(function () {
                 $('#loadingScreen').addClass('hide');
                 setTimeout(function () {
@@ -99,8 +90,14 @@
                 }, 450);
             }, 800);
 
-            // ── Boot app shell ──
-            AppController.init();
+            // Step 4: Init app shell — in try/catch so errors never block step 3
+            setTimeout(function () {
+                try {
+                    AppController.init();
+                } catch (e) {
+                    console.error('AppController.init error:', e);
+                }
+            }, 100);
 
         });
     </script>

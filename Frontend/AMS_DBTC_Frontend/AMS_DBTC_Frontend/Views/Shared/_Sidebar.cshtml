@@ -1,52 +1,72 @@
-﻿
-<aside class="sidebar">
+﻿<aside class="sidebar">
     <div class="sb-top">
         <div class="sb-brand">
             <div class="b-dot"></div>
             <span>EduAttend</span>
         </div>
         <div class="role-row">
-            <button class="rb on" data-role="teacher" onclick="AppController.switchRole('teacher', this)">Teacher</button>
-            <button class="rb" data-role="admin" onclick="AppController.switchRole('admin', this)">Admin</button>
+            <button class="rb on" data-role="teacher"
+                    onclick="AppController.switchRole('teacher', this)">
+                Teacher
+            </button>
+            <button class="rb" data-role="admin"
+                    onclick="AppController.switchRole('admin', this)">
+                Admin
+            </button>
         </div>
     </div>
 
     <nav class="sb-nav">
         <div class="nav-sec">Main</div>
+
         <a class="ni @(ViewData["Page"]?.ToString() == "dash" ? "on" : "")"
-           data-page="dash"
            href="/AMS/DashBoard/Index">
             <span class="ic">📊</span>Dashboard
         </a>
+
         <a class="ni @(ViewData["Page"]?.ToString() == "att" ? "on" : "")"
-           data-page="att"
            href="/AMS/DashBoard/Attendance">
             <span class="ic">📋</span>Daily Attendance
         </a>
+
+        <div class="nav-sec">Directory</div>
+
         <a class="ni @(ViewData["Page"]?.ToString() == "stu" ? "on" : "")"
-           data-page="stu"
            href="/AMS/Student/Index">
             <span class="ic">👥</span>Students
         </a>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "tch" ? "on" : "")"
+           href="/AMS/Teacher/Index">
+            <span class="ic">👨‍🏫</span>Teachers
+        </a>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "crs" ? "on" : "")"
+           href="/AMS/Course/Index">
+            <span class="ic">📚</span>Courses
+        </a>
+
+        <div class="nav-sec">Reports</div>
+
         <a class="ni @(ViewData["Page"]?.ToString() == "rpt" ? "on" : "")"
-           data-page="rpt"
            href="/AMS/DashBoard/Reports">
             <span class="ic">📈</span>Reports
         </a>
+
         <div class="nav-sec">Account</div>
+
         <a class="ni @(ViewData["Page"]?.ToString() == "set" ? "on" : "")"
-           data-page="set"
            href="/AMS/DashBoard/Settings">
             <span class="ic">⚙️</span>Settings
         </a>
     </nav>
 
     <div class="sb-foot">
-        <div class="u-av" id="uAv">JR</div>
+        <div class="u-av" id="uAv">--</div>
         <div>
-            <div class="u-nm" id="uNm">Ms. J. Reyes</div>
-            <div class="u-rl" id="uRl">Grade 10 - Sec. B</div>
+            <div class="u-nm" id="uNm">Loading...</div>
+            <div class="u-rl" id="uRl"></div>
         </div>
-        <button class="lo-btn" onclick="AuthController.logout()" title="Logout">⏻</button>
+        <a class="lo-btn" href="/AMS/Auth/Logout" title="Logout">⏻</a>
     </div>
 </aside>

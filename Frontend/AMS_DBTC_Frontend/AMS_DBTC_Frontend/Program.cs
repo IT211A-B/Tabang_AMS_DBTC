@@ -35,6 +35,6 @@ app.MapControllerRoute(
 // DO NOT use app.MapGet("/") — it conflicts with MapControllerRoute
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=Auth}/{action=login}/{id?}");
 
 app.Run();
