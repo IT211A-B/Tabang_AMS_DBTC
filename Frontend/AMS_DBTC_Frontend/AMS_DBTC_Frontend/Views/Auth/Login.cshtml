@@ -1,0 +1,65 @@
+﻿﻿﻿@{
+ViewData["Title"] = "Sign In";
+Layout = null; // Auth pages use no layout
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In — EduAttend</title>
+    <link rel="stylesheet" href="~/css/root.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
+    <script src="~/lib/jquery/jquery.min.js"></script>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-card">
+
+            <div class="auth-logo">
+                <img src="@Url.Content("~/css/assets/donboscologo.jpg")" />
+                <h1>DBTC ATTENDANCE</h1>
+            </div>
+
+            <h2>Sign in</h2>
+            <p class="sub">Enter your credentials to continue.</p>
+            <div class="auth-err" id="loginErr">Incorrect email or password.</div>
+
+            <div class="fg">
+                <label>Email</label>
+                <input type="email" id="liEmail" value="email@dbtc.edu.ph" />
+            </div>
+            <div class="fg">
+                <label>Password</label>
+                <input type="password" id="liPass" value="teacher123" />
+            </div>
+            <div class="fg">
+                <label>Role</label>
+                <select id="liRole">
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+
+            <button class="btn-block" id="btnLogin" onclick="location.href='@Url.Action("attendance", "DashBoard")'">
+                Sign In
+            </button>
+            <div class="auth-switch"> 
+                Don't have an account? <a href="~/Auth/register">Register</a>
+            </div>
+
+            <div class="auth-hint">
+                <strong>Demo:</strong>
+                teacher@school.edu.ph / teacher123
+                admin@school.edu.ph / admin123
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+    </script>
+
+</body>
+</html>

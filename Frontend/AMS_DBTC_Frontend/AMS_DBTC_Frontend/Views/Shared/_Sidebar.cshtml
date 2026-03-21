@@ -1,0 +1,72 @@
+﻿<aside class="sidebar">
+    <div class="sb-top">
+        <div class="sb-brand">
+            <div class="b-dot"></div>
+            <span>EduAttend</span>
+        </div>
+        <div class="role-row">
+            <button class="rb on" data-role="teacher"
+                    onclick="AppController.switchRole('teacher', this)">
+                Teacher
+            </button>
+            <button class="rb" data-role="admin"
+                    onclick="AppController.switchRole('admin', this)">
+                Admin
+            </button>
+        </div>
+    </div>
+
+    <nav class="sb-nav">
+        <div class="nav-sec">Main</div>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "dash" ? "on" : "")"
+           href="/DashBoard/Index">
+            <span class="ic">📊</span>Dashboard
+        </a>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "att" ? "on" : "")"
+           href="/DashBoard/Attendance">
+            <span class="ic">📋</span>Daily Attendance
+        </a>
+
+        <div class="nav-sec">Directory</div>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "stu" ? "on" : "")"
+           href="/Student/Index">
+            <span class="ic">👥</span>Students
+        </a>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "tch" ? "on" : "")"
+           href="/Teacher/Index">
+            <span class="ic">👨‍🏫</span>Teachers
+        </a>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "crs" ? "on" : "")"
+           href="/Course/Index">
+            <span class="ic">📚</span>Courses
+        </a>
+
+        <div class="nav-sec">Reports</div>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "rpt" ? "on" : "")"
+           href="/DashBoard/Reports">
+            <span class="ic">📈</span>Reports
+        </a>
+
+        <div class="nav-sec">Account</div>
+
+        <a class="ni @(ViewData["Page"]?.ToString() == "set" ? "on" : "")"
+           href="/DashBoard/Settings">
+            <span class="ic">⚙️</span>Settings
+        </a>
+    </nav>
+
+    <div class="sb-foot">
+        <div class="u-av" id="uAv">--</div>
+        <div>
+            <div class="u-nm" id="uNm">Loading...</div>
+            <div class="u-rl" id="uRl"></div>
+        </div>
+        <a class="lo-btn" href="/Auth/Logout" title="Logout">⏻</a>
+    </div>
+</aside>

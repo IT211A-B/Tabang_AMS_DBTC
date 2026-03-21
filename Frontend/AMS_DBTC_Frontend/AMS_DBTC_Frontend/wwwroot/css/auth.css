@@ -1,0 +1,187 @@
+﻿.auth-wrapper {
+    min-height: 100vh;
+    background: var(--g50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-card {
+    background: var(--white);
+    border: 1px solid var(--g200);
+    border-radius: var(--radius-lg);
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-md);
+    animation: fadeUp .25s ease;
+}
+
+    .auth-card.wide {
+        max-width: 460px;
+    }
+
+/* ── Logo ── */
+.auth-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+    /* School logo image — circular frame */
+    .auth-logo img {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--g200);
+        box-shadow: 0 4px 14px rgba(43, 92, 184, 0.12);
+        background: var(--white);
+        display: block;
+        transition: box-shadow .2s;
+    }
+
+        .auth-logo img:hover {
+            box-shadow: 0 6px 20px rgba(43, 92, 184, 0.2);
+        }
+
+    /* App name */
+    .auth-logo h1 {
+        font-family: 'Nunito', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--blue);
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+    }
+
+    /* Small school name subtitle under h1 — optional */
+    .auth-logo span {
+        display: block;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--g400);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-top: 2px;
+    }
+
+.auth-card h2 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.auth-card .sub {
+    font-size: 12px;
+    color: var(--g400);
+    margin-bottom: 20px;
+}
+
+/* Error box */
+.auth-err {
+    background: var(--red-bg);
+    border-left: 3px solid var(--red);
+    color: var(--red);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: none;
+}
+
+    .auth-err.show {
+        display: block;
+    }
+
+/* Hint box */
+.auth-hint {
+    background: var(--blue-light);
+    padding: 9px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--g600);
+    margin-top: 12px;
+}
+
+/* Form group */
+.fg {
+    margin-bottom: 12px;
+}
+
+    .fg label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--g600);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .fg input,
+    .fg select {
+        width: 100%;
+        padding: 8px 11px;
+        border: 1px solid var(--g200);
+        border-radius: var(--radius);
+        font-size: 13px;
+        background: var(--white);
+        transition: border .15s;
+    }
+
+        .fg input:focus,
+        .fg select:focus {
+            border-color: var(--blue);
+        }
+
+/* Two-column form row */
+.two-fg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Submit button */
+.btn-block {
+    width: 100%;
+    padding: 10px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background .15s;
+}
+
+    .btn-block:hover {
+        background: var(--blue-dark);
+    }
+
+/* Switch link */
+.auth-switch {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--g400);
+}
+
+    .auth-switch a {
+        color: var(--blue);
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }

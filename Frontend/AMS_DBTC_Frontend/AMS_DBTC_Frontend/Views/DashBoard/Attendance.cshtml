@@ -1,0 +1,143 @@
+﻿﻿﻿@{
+ViewData["Title"] = "Settings";
+ViewData["Page"] = "set";
+ViewData["PageTitle"] = "Settings";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="setPage">
+            <div class="set-layout">
+
+                {{!-- Menu --}}
+                <div class="set-menu">
+                    <div class="set-mi on" onclick="SetController.tab(this,'sPP')">👤 Profile</div>
+                    <div class="set-mi" onclick="SetController.tab(this,'sCP')">🏫 Class &amp; Section</div>
+                    <div class="set-mi" onclick="SetController.tab(this,'sNP')">🔔 Notifications</div>
+                    <div class="set-mi" onclick="SetController.tab(this,'sSP')">🔒 Security</div>
+                </div>
+
+                {{!-- Panels --}}
+                <div>
+
+                    {{!-- Profile --}}
+                    <div class="set-panel" id="sPP">
+                        <h3>Profile Information</h3>
+                        <p class="sd">Update your personal details and display name.</p>
+                        <div class="sg">
+                            <label>Full Name</label>
+                            <input type="text" id="setName" />
+                        </div>
+                        <div class="sg">
+                            <label>Email Address</label>
+                            <input type="email" id="setEmail" />
+                        </div>
+                        <div class="sg">
+                            <label>Role</label>
+                            <select>
+                                <option>Teacher</option>
+                                <option>Admin</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="SetController.saveProfile()">Save Changes</button>
+                    </div>
+
+                    {{!-- Class --}}
+                    <div class="set-panel" id="sCP" style="display:none;">
+                        <h3>Class &amp; Section</h3>
+                        <p class="sd">Set your assigned class and section details.</p>
+                        <div class="sg">
+                            <label>Assigned Section</label>
+                            <select>
+                                <option>BSIT-1 </option>
+                                <option>BSIT-2</option>
+                                <option>BSIT-3</option>
+                                <option>BSIT-4</option>
+                                <option>BSME-1</option>
+                                <option>BSME-2</option>
+                                <option>BSME-3</option>
+                                <option>BSME-4</option>
+                            </select>
+                        </div>
+                        <div class="sg">
+                            <label>School Year</label>
+                            <input type="text" value="2025 - 2026" />
+                        </div>
+                        <div class="sg">
+                            <label>Semester</label>
+                            <select>
+                                <option>1st Semester</option>
+                                <option>2nd Semester</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary btn-sm">Save Changes</button>
+                    </div>
+
+                    {{!-- Notifications --}}
+                    <div class="set-panel" id="sNP" style="display:none;">
+                        <h3>Notifications</h3>
+                        <p class="sd">Manage how and when you receive alerts.</p>
+                        <div class="sg">
+                            <div class="tog-row">
+                                <div class="ti">
+                                    <strong>Email Notifications</strong>
+                                    <span>Receive daily attendance summary via email</span>
+                                </div>
+                                <label class="tog"><input type="checkbox" checked /><span class="tog-sl"></span></label>
+                            </div>
+                            <div class="tog-row">
+                                <div class="ti">
+                                    <strong>Absence Alerts</strong>
+                                    <span>Get notified when a student is absent 3+ days</span>
+                                </div>
+                                <label class="tog"><input type="checkbox" checked /><span class="tog-sl"></span></label>
+                            </div>
+                            <div class="tog-row">
+                                <div class="ti">
+                                    <strong>Late Submission Warning</strong>
+                                    <span>Remind me if attendance not submitted by 8AM</span>
+                                </div>
+                                <label class="tog"><input type="checkbox" /><span class="tog-sl"></span></label>
+                            </div>
+                            <div class="tog-row">
+                                <div class="ti">
+                                    <strong>Weekly Reports</strong>
+                                    <span>Send weekly summary every Friday</span>
+                                </div>
+                                <label class="tog"><input type="checkbox" checked /><span class="tog-sl"></span></label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm">Save Preferences</button>
+                    </div>
+
+                    {{!-- Security --}}
+                    <div class="set-panel" id="sSP" style="display:none;">
+                        <h3>Security</h3>
+                        <p class="sd">Update your password and account security settings.</p>
+                        <div class="sg">
+                            <label>Current Password</label>
+                            <input type="password" id="sCur" placeholder="••••••••" />
+                        </div>
+                        <div class="sg">
+                            <label>New Password</label>
+                            <input type="password" id="sNew" placeholder="••••••••" />
+                        </div>
+                        <div class="sg">
+                            <label>Confirm New Password</label>
+                            <input type="password" id="sCon" placeholder="••••••••" />
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="SetController.changePass()">Update Password</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>{{!-- /page-wrap --}}
+
+    </div>{{!-- /main-area --}}
+</div>{{!-- /app-shell --}}

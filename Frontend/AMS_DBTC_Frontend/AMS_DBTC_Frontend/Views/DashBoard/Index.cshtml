@@ -1,0 +1,118 @@
+﻿﻿﻿@{
+ViewData["Title"] = "Dashboard";
+ViewData["Page"] = "dash";
+ViewData["PageTitle"] = "Dashboard";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="dashPage">
+
+            {{!-- Stat Cards --}}
+            <div class="stat-row">
+                <div class="stat">
+                    <div class="stat-ic ic-b">👥</div>
+                    <div>
+                        <div class="stat-lbl">Total</div>
+                        <div class="stat-val" id="dT">0</div>
+                        <div class="stat-sub">Students</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-ic ic-g">✅</div>
+                    <div>
+                        <div class="stat-lbl">Present</div>
+                        <div class="stat-val" id="dP">0</div>
+                        <div class="stat-sub" id="dPpct">—</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-ic ic-r">❌</div>
+                    <div>
+                        <div class="stat-lbl">Absent</div>
+                        <div class="stat-val" id="dA">0</div>
+                        <div class="stat-sub" id="dApct">—</div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-ic ic-o">⏰</div>
+                    <div>
+                        <div class="stat-lbl">Late</div>
+                        <div class="stat-val" id="dL">0</div>
+                        <div class="stat-sub" id="dLpct">—</div>
+                    </div>
+                </div>
+            </div>
+
+            {{!-- Two-Column Row --}}
+            <div class="two-col">
+
+                {{!-- Weekly Bar Chart --}}
+                <div class="card">
+                    <div class="card-h">
+                        <div>
+                            <h3>Weekly Attendance</h3>
+                            <p>Mon – Fri this week</p>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g600)">
+                                <span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>P
+                            </span>
+                            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g600)">
+                                <span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block"></span>A
+                            </span>
+                            <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g600)">
+                                <span style="width:8px;height:8px;border-radius:2px;background:var(--orange);display:inline-block"></span>L
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-b">
+                        <div id="barchart" class="barchart"></div>
+                        <div id="barlabels" class="bc-labels"></div>
+                    </div>
+                </div>
+
+                {{!-- Right: Today + Alerts --}}
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="card">
+                        <div class="card-h"><h3>Today</h3></div>
+                        <div class="minis">
+                            <div class="mini">
+                                <div class="mini-v" id="gRate" style="color:var(--blue)">—</div>
+                                <div class="mini-l">Rate</div>
+                            </div>
+                            <div class="mini">
+                                <div class="mini-v" id="gP" style="color:var(--green)">0</div>
+                                <div class="mini-l">Present</div>
+                            </div>
+                            <div class="mini">
+                                <div class="mini-v" id="gAL" style="color:var(--red)">0</div>
+                                <div class="mini-l">Abs+Late</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="flex:1">
+                        <div class="card-h"><h3>Alerts</h3></div>
+                        <div class="card-b" id="dashAlerts"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{!-- Activity Log --}}
+            <div class="card">
+                <div class="card-h">
+                    <div><h3>Activity</h3><p>Recent system events</p></div>
+                </div>
+                <div class="card-b" id="actLog"></div>
+            </div>
+
+        </div>{{!-- /page-wrap --}}
+    </div>{{!-- /main-area --}}
+</div>{{!-- /app-shell --}}

@@ -1,0 +1,78 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register — EduAttend</title>
+    <link rel="stylesheet" href="~/css/root.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
+    <script src="~/lib/jquery/jquery.min.js"></script>
+</head>
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-card wide">
+
+            <div class="auth-logo">
+                <img src="@Url.Content("~/css/assets/donboscologo.jpg")" />
+                <h1>DBTC ATTENDANCE</h1>
+            </div>
+
+            <h2>Create account</h2>
+            <p class="sub">Fill in your details to get started.</p>
+
+            <div class="auth-err" id="regErr"></div>
+
+            <div class="two-fg">
+                <div class="fg"><label>First Name</label><input type="text" id="regFn" placeholder="Dominic" /></div>
+                <div class="fg"><label>Last Name</label><input type="text" id="regLn" placeholder="Ocarol" /></div>
+            </div>
+
+            <div class="fg">
+                <label>Email</label>
+                <input type="email" id="regEmail" placeholder="dbtc@email.edu.ph" />
+            </div>
+
+            <div class="two-fg">
+                <div class="fg"><label>Password</label><input type="password" id="regPass" placeholder="Min. 6 characters" /></div>
+                <div class="fg"><label>Confirm</label><input type="password" id="regPass2" placeholder="Repeat password" /></div>
+            </div>
+
+            <div class="two-fg">
+                <div class="fg">
+                    <label>Role</label>
+                    <select id="regRole">
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Course</label>
+                    <select id="regSec">
+                        <option>BSIT-1 </option>
+                        <option>BSIT-2</option>
+                        <option>BSIT-3</option>
+                        <option>BSIT-4</option>
+                        <option>BSME-1</option>
+                        <option>BSME-2</option>
+                        <option>BSME-3</option>
+                        <option>BSME-4</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-block" id="btnLogin" onclick="location.href='@Url.Action("attendance", "DashBoard")'">
+                Create Account
+            </button>
+            <div class="auth-switch">
+                Already have an account? <a href="~/Auth/login">Sign in</a>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

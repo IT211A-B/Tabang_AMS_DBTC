@@ -1,0 +1,133 @@
+﻿@{
+    ViewData["Title"] = "Courses";
+    ViewData["Page"] = "crs";
+    ViewData["PageTitle"] = "Courses";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="crsPage">
+
+            @* Control Bar *@
+            <div class="ctrl">
+                <div>
+                    <h2>Course Directory</h2>
+                    <p>View enrolled students per course and manage course details</p>
+                </div>
+                <div class="ctrl-r">
+                    <input class="srch" type="text"
+                           placeholder="Search course..."
+                           oninput="CourseController.filter(this.value)" />
+                    <button class="btn btn-p btn-sm"
+                            onclick="CourseController.openAdd()">
+                        + Add Course
+                    </button>
+                </div>
+            </div>
+
+            @* Course Grid *@
+            <div class="stu-grid" id="courseGrid"></div>
+
+        </div>
+
+    </div>
+</div>
+
+@* ── Add Course Modal ── *@
+<div class="overlay" id="addCourseOverlay">
+    <div class="modal">
+        <h3>Add New Course</h3>
+        <div class="md">Fill in the course details below.</div>
+        <div class="fg">
+            <label>Course Name</label>
+            <input type="text" id="cAddName" placeholder="Mathematics 10" />
+        </div>
+        <div class="fg">
+            <label>Course Code</label>
+            <input type="text" id="cAddCode" placeholder="MATH10" />
+        </div>
+        <div class="fg">
+            <label>Description</label>
+            <input type="text" id="cAddDesc" placeholder="Short description..." />
+        </div>
+        <div class="fg">
+            <label>Assign Teacher</label>
+            <select id="cAddTeacher"></select>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-o btn-sm"
+                    onclick="CourseController.closeModal('addCourseOverlay')">
+                Cancel
+            </button>
+            <button class="btn btn-p btn-sm"
+                    onclick="CourseController.add()">
+                Add Course
+            </button>
+        </div>
+    </div>
+</div>
+
+@* ── Edit Course Modal ── *@
+<div class="overlay" id="editCourseOverlay">
+    <div class="modal">
+        <h3>Edit Course</h3>
+        <input type="hidden" id="cEditId" />
+        <div class="fg">
+            <label>Course Name</label>
+            <input type="text" id="cEditName" />
+        </div>
+        <div class="fg">
+            <label>Course Code</label>
+            <input type="text" id="cEditCode" />
+        </div>
+        <div class="fg">
+            <label>Description</label>
+            <input type="text" id="cEditDesc" />
+        </div>
+        <div class="fg">
+            <label>Assign Teacher</label>
+            <select id="cEditTeacher"></select>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-o btn-sm"
+                    onclick="CourseController.closeModal('editCourseOverlay')">
+                Cancel
+            </button>
+            <button class="btn btn-p btn-sm"
+                    onclick="CourseController.saveEdit()">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>
+
+@* ── Course Students Modal ── *@
+<div class="overlay" id="courseStudentsOverlay">
+    <div class="modal" style="max-width:500px;">
+        <h3 id="csCourseName">Course Students</h3>
+        <input type="hidden" id="csCourseId" />
+        <div class="md" style="margin-bottom:12px;">Enrolled students — click Unenroll to remove from course.</div>
+        <div id="csCourseStudents" style="max-height:320px;overflow-y:auto;"></div>
+        <div class="modal-foot">
+            <button class="btn btn-o btn-sm"
+                    onclick="CourseController.closeModal('courseStudentsOverlay')">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            AppController.init();
+            CourseController.render();
+        });
+    </script>
+}

@@ -1,0 +1,191 @@
+﻿@{
+    string? title = ViewData["Title"] as string;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(title ?? "EduAttend AMS")</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="~/css/root.css" />
+    <link rel="stylesheet" href="~/css/loading.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <link rel="stylesheet" href="~/css/pages.css" />
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Page-specific scripts section -->
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="ls-circles">
+            <div class="ls-circle"></div>
+            <div class="ls-circle"></div>
+            <div class="ls-circle"></div>
+            <div class="ls-circle"></div>
+        </div>
+        <div class="ls-card">
+            <div class="ls-icon">
+                <img src="~/css/assets/donboscologo.jpg" alt="School Logo"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';" />
+                <span style="display:none;">📋</span>
+            </div>
+            <div class="ls-name">DBTC</div>
+            <div class="ls-tagline">Attendance Management System</div>
+            <div class="ls-dots">
+                <div class="ls-dot"></div>
+                <div class="ls-dot"></div>
+                <div class="ls-dot"></div>
+            </div>
+            <div class="ls-text" id="lsStatus">Loading, please wait…</div>
+            <div class="ls-bar-track">
+                <div class="ls-bar-fill" id="lsBar"></div>
+            </div>
+            <div class="ls-pct" id="lsPct">0%</div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast-container"></div>
+
+    <!-- Main Content -->
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- Core JavaScript Files (in dependency order) -->
+    <script src="~/js/models.js"></script>
+    <script src="~/js/store.js"></script>
+    <script src="~/js/helpers.js"></script>
+    <script src="~/js/authController.js"></script>
+    <script src="~/js/appController.js"></script>
+    <script src="~/js/dashController.js"></script>
+    <script src="~/js/attController.js"></script>
+    <script src="~/js/pageController.js"></script>
+    <script src="~/js/main.js"></script>
+
+    <!-- Page-specific scripts -->
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Global initialization script -->
+    <script>
+        // Global namespace for your application
+        window.EduAttend = {
+            initialized: false,
+            version: '1.0.0'
+        };
+
+        // Safe loading screen dismissal
+        function dismissLoadingScreen() {
+            const elements = {
+                bar: document.getElementById('lsBar'),
+                status: document.getElementById('lsStatus'),
+                pct: document.getElementById('lsPct'),
+                screen: document.getElementById('loadingScreen')
+            };
+
+            // Guard clause - return if screen doesn't exist
+            if (!elements.screen) {
+                console.warn('Loading screen elements not found');
+                return;
+            }
+
+            const steps = [
+                { at: 100, p: 25, msg: 'Loading resources...' },
+                { at: 300, p: 55, msg: 'Initializing system...' },
+                { at: 500, p: 85, msg: 'Almost ready...' },
+                { at: 650, p: 100, msg: 'Done!' }
+            ];
+
+            // Use let for proper block scoping
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                setTimeout(() => {
+                    if (elements.bar) {
+                        elements.bar.style.width = step.p + '%';
+                    }
+                    if (elements.pct) {
+                        elements.pct.textContent = step.p + '%';
+                    }
+                    if (elements.status) {
+                        elements.status.textContent = step.msg;
+                    }
+                }, step.at);
+            }
+
+            // Fade out and remove loading screen
+            setTimeout(() => {
+                if (elements.screen) {
+                    elements.screen.style.transition = 'opacity 0.45s ease';
+                    elements.screen.style.opacity = '0';
+
+                    setTimeout(() => {
+                        if (elements.screen && elements.screen.parentNode) {
+                            elements.screen.parentNode.removeChild(elements.screen);
+                        }
+                    }, 450);
+                }
+            }, 800);
+        }
+
+        // Safe application initialization
+        function initApp() {
+            // Check if required core objects exist
+            if (typeof Session === 'undefined') {
+                console.warn('Session object not found - skipping authentication check');
+            } else if (typeof Session.isLoggedIn !== 'function') {
+                console.warn('Session.isLoggedIn is not a function');
+            } else if (!Session.isLoggedIn()) {
+                // User not logged in, redirect to login page
+                window.location.href = '/Auth/Login';
+                return;
+            }
+
+            // Initialize AppController if it exists
+            if (typeof AppController !== 'undefined') {
+                if (typeof AppController.init === 'function') {
+                    AppController.init();
+                } else {
+                    console.warn('AppController.init method not found');
+                }
+            } else {
+                console.warn('AppController not found');
+            }
+
+            EduAttend.initialized = true;
+        }
+
+        // Initialize when DOM is ready
+        function onDOMReady(callback) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', callback);
+            } else {
+                callback();
+            }
+        }
+
+        // Main initialization
+        onDOMReady(() => {
+            try {
+                dismissLoadingScreen();
+                initApp();
+            } catch (error) {
+                console.error('Critical initialization error:', error);
+                // Still try to initialize even if loading screen fails
+                initApp();
+            }
+        });
+    </script>
+</body>
+</html>
