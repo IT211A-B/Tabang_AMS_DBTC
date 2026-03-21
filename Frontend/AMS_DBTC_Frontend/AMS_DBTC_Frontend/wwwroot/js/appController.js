@@ -47,7 +47,7 @@
 
         @RenderBody()
 
-        <script src="~/js/models.js"></script>
+         <script src="~/js/models.js"></script>
         <script src="~/js/store.js"></script>
         <script src="~/js/helpers.js"></script>
         <script src="~/js/authController.js"></script>
@@ -98,8 +98,8 @@
                 }, 800);
             }
 
-           function initApp() {
-           /*     try {
+          function initApp() {
+              try {
                     if (typeof Session !== 'undefined' && !Session.isLoggedIn()) {
                     window.location.href = '/Auth/Login';
                         return;
@@ -109,7 +109,7 @@
                   window.location.href = '/Auth/Login';
                     return;
                 }
-                */
+                
                 try {
                     if (typeof AppController !== 'undefined') {
                         AppController.init();
