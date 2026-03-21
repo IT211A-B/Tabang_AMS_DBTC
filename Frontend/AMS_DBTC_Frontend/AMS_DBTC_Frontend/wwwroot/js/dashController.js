@@ -1,119 +1,119 @@
-﻿var DashController = {
+﻿// Dashboard Controller
+window.DashController = {
+    // Initialize dashboard
+    init: function () {
+        try {
+            console.log('Initializing dashboard...');
 
-    render: function () {
-        DashController._renderStats();
-        DashController._renderChart();
-        DashController._renderAlerts();
-        DashController._renderActivity();
-    },
-
-    // ── Top stat cards ────────────────────────────────────────
-    _renderStats: function () {
-        var recs = $.map(STATE.attendance, function (r) { return r; });
-        var total = STUDENTS.length;
-        var p = 0, a = 0, l = 0;
-
-        $.each(recs, function (i, r) {
-            if (r.status === 'P') p++;
-            else if (r.status === 'A') a++;
-            else if (r.status === 'L') l++;
-        });
-
-        var rate = total > 0 ? Math.round(p / total * 100) : 0;
-
-        $('#dT').text(total);
-        $('#dP').text(p);
-        $('#dA').text(a);
-        $('#dL').text(l);
-        $('#dPpct').text(total ? rate + '% of class' : '—');
-        $('#dApct').text(total ? Math.round(a / total * 100) + '% of class' : '—');
-        $('#dLpct').text(total ? Math.round(l / total * 100) + '% of class' : '—');
-
-        $('#gRate').text(recs.length ? rate + '%' : '—');
-        $('#gP').text(p);
-        $('#gAL').text(a + l);
-    },
-
-    // ── Weekly bar chart ──────────────────────────────────────
-    _renderChart: function () {
-        var bars = '';
-        var labels = '';
-
-        $.each(STATE.weeklyData, function (i, d) {
-            bars += '<div class="bc-g"><div class="bc-b" style="background:var(--green);height:' + d.p + '%"></div></div>' +
-                '<div class="bc-g"><div class="bc-b" style="background:var(--red);height:' + d.a + '%"></div></div>' +
-                '<div class="bc-g"><div class="bc-b" style="background:var(--orange);height:' + d.l + '%"></div></div>';
-
-            if (i < STATE.weeklyData.length - 1) {
-                bars += '<div class="bc-divider"></div>';
+            // Check authentication
+            if (typeof Models !== 'undefined' &&
+                typeof Models.Session !== 'undefined' &&
+                !Models.Session.isLoggedIn()) {
+                window.location.href = '/Auth/Login';
+                return;
             }
 
-            labels += '<span class="bc-lbl">' + d.day + '</span>';
-        });
+            // Load dashboard data
+            this.loadDashboardData();
 
-        $('#barchart').html(bars);
-        $('#barlabels').html(labels);
-    },
+            // Setup event listeners
+            this.setupEventListeners();
 
-    // ── Alerts panel ──────────────────────────────────────────
-    _renderAlerts: function () {
-        var html = '';
-
-        $.each(STUDENTS, function (i, s) {
-            if (s.isAtRisk()) {
-                html += '<div class="al-item al-danger">' +
-                    '<div class="al-ico">⚠️</div>' +
-                    '<div class="al-t">' +
-                    '<strong>' + s.name + '</strong>' +
-                    '<span>' + s.rate() + '% rate · ' + s.a + ' absences</span>' +
-                    '</div>' +
-                    '</div>';
-            }
-        });
-
-        $.each(STUDENTS, function (i, s) {
-            if (s.l >= 3 && !s.isAtRisk()) {
-                html += '<div class="al-item al-warn">' +
-                    '<div class="al-ico">🕐</div>' +
-                    '<div class="al-t">' +
-                    '<strong>' + s.name + '</strong>' +
-                    '<span>Late ' + s.l + 'x this period</span>' +
-                    '</div>' +
-                    '</div>';
-            }
-        });
-
-        if (!html) {
-            html = '<div class="al-item al-success">' +
-                '<div class="al-ico">✅</div>' +
-                '<div class="al-t"><strong>All good!</strong><span>No attendance alerts.</span></div>' +
-                '</div>';
+            console.log('Dashboard initialized');
+        } catch (error) {
+            console.error('Dashboard initialization error:', error);
         }
-
-        $('#dashAlerts').html(html);
     },
 
-    // ── Activity log ──────────────────────────────────────────
-    _renderActivity: function () {
-        if (!STATE.activityLog.length) {
-            $('#actLog').html('<p style="font-size:11px;color:var(--g400);">No recent activity.</p>');
-            return;
+    // Load dashboard data
+    loadDashboardData: function () {
+        try {
+            Helpers.ajax({
+                method: 'GET',
+                url: '/Dashboard/GetData',
+                success: (data) => {
+                    try {
+                        if (data) {
+                            this.renderDashboard(data);
+                        }
+                    } catch (error) {
+                        console.error('Dashboard data render error:', error);
+                    }
+                },
+                error: (error) => {
+                    console.error('Dashboard data load error:', error);
+                    Helpers.showToast('Failed to load dashboard data', 'error');
+                }
+            });
+        } catch (error) {
+            console.error('Dashboard data loading error:', error);
         }
+    },
 
-        var html = '';
-        var logs = STATE.activityLog.slice(0, 8);
+    // Render dashboard
+    renderDashboard: function (data) {
+        try {
+            // Update stats
+            const statsContainer = document.getElementById('statsContainer');
+            if (statsContainer && data.stats) {
+                statsContainer.innerHTML = this.renderStats(data.stats);
+            }
 
-        $.each(logs, function (i, entry) {
-            html += '<div class="act-row">' +
-                '<div class="act-ic" style="background:var(--blue-light)">' + entry.icon + '</div>' +
-                '<div class="act-txt">' +
-                '<strong>' + entry.action + '</strong>' +
-                '<span>' + entry.detail + '</span>' +
-                '</div>' +
-                '<div class="act-time">' + entry.time + '</div>' +
-                '</div>';
-        });
+            // Update charts
+            if (data.charts) {
+                this.renderCharts(data.charts);
+            }
+        } catch (error) {
+            console.error('Dashboard render error:', error);
+        }
+    },
 
-        $('#actLog').html(html);
+    // Render stats
+    renderStats: function (stats) {
+        try {
+            return stats.map(stat => `
+                <div class="stat-card">
+                    <div class="stat-value">${stat.value || 0}</div>
+                    <div class="stat-label">${stat.label || ''}</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Stats render error:', error);
+            return '';
+        }
+    },
+
+    // Setup event listeners
+    setupEventListeners: function () {
+        try {
+            // Refresh button
+            const refreshBtn = document.getElementById('refreshDashboard');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    this.loadDashboardData();
+                    Helpers.showToast('Refreshing...', 'info');
+                });
+            }
+
+            // Date range picker
+            const dateRange = document.getElementById('dateRange');
+            if (dateRange) {
+                dateRange.addEventListener('change', (e) => {
+                    this.loadDashboardData({ dateRange: e.target.value });
+                });
+            }
+        } catch (error) {
+            console.error('Event listeners setup error:', error);
+        }
+    },
+
+    // Render charts
+    renderCharts: function (charts) {
+        try {
+            // Add Chart.js or similar library for charts
+            console.log('Rendering charts:', charts);
+        } catch (error) {
+            console.error('Charts render error:', error);
+        }
     }
 };

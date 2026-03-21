@@ -1,97 +1,95 @@
-﻿var AuthController = {
-
-    login: function () {
-        var email = $.trim($('#liEmail').val());
-        var pass = $.trim($('#liPass').val());
-        var role = $('#liRole').val();
-
-        if (!email || !pass) {
-            AuthController._showErr('#loginErr', 'Please fill in all fields.');
-            return;
-        }
-
-        var user = null;
-        $.each(USERS, function (i, u) {
-            if (u.email === email && u.pass === pass) {
-                user = u;
-                return false;
+﻿// Authentication Controller
+window.AuthController = {
+    // Login form handler
+    initLogin: function () {
+        try {
+            const loginForm = document.getElementById('loginForm');
+            if (!loginForm) {
+                console.warn('Login form not found');
+                return;
             }
-        });
 
-        if (!user) {
-            AuthController._showErr('#loginErr', 'Incorrect email or password.');
-            return;
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const username = loginForm.querySelector('#username')?.value;
+                const password = loginForm.querySelector('#password')?.value;
+
+                if (!username || !password) {
+                    Helpers.showToast('Please enter username and password', 'error');
+                    return;
+                }
+
+                // Disable form during submission
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Logging in...';
+                }
+
+                // Make AJAX request
+                Helpers.ajax({
+                    method: 'POST',
+                    url: '/Auth/Login',
+                    data: { username, password },
+                    success: (response) => {
+                        try {
+                            if (response.success) {
+                                // Store user session
+                                if (response.user) {
+                                    Models.Session.setUser(response.user);
+                                }
+                                Helpers.showToast('Login successful!', 'success');
+                                window.location.href = response.redirect || '/Dashboard';
+                            } else {
+                                Helpers.showToast(response.message || 'Login failed', 'error');
+                            }
+                        } catch (error) {
+                            console.error('Login response error:', error);
+                            Helpers.showToast('An error occurred', 'error');
+                        }
+                    },
+                    error: (error) => {
+                        console.error('Login error:', error);
+                        Helpers.showToast('Connection error. Please try again.', 'error');
+                    }
+                }).finally(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Login';
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('AuthController init error:', error);
         }
-
-        Session.save(user, role);
-        window.location.href = '/DashBoard/Index';
     },
 
-    register: function () {
-        var fn = $.trim($('#regFn').val());
-        var ln = $.trim($('#regLn').val());
-        var email = $.trim($('#regEmail').val());
-        var pass = $('#regPass').val();
-        var pass2 = $('#regPass2').val();
-        var role = $('#regRole').val();
-        var section = $('#regSec').val();
-
-        if (!fn || !ln || !email || !pass || !pass2) {
-            AuthController._showErr('#regErr', 'Please fill in all fields.');
-            return;
-        }
-        if (!Helpers.isValidEmail(email)) {
-            AuthController._showErr('#regErr', 'Please enter a valid email.');
-            return;
-        }
-        if (pass.length < 6) {
-            AuthController._showErr('#regErr', 'Password must be at least 6 characters.');
-            return;
-        }
-        if (pass !== pass2) {
-            AuthController._showErr('#regErr', 'Passwords do not match.');
-            return;
-        }
-
-        var exists = false;
-        $.each(USERS, function (i, u) {
-            if (u.email === email) { exists = true; return false; }
-        });
-        if (exists) {
-            AuthController._showErr('#regErr', 'Email already registered.');
-            return;
-        }
-
-        var newUser = new UserModel({
-            name: fn + ' ' + ln,
-            email: email,
-            pass: pass,
-            role: role,
-            section: section
-        });
-        USERS.push(newUser);
-
-        Session.save(newUser, role);
-        window.location.href = '/DashBoard/Index';
-    },
-
+    // Logout handler
     logout: function () {
-        Session.clear();
-        //window.location.href = '/Auth/Login';
-    },
-
-    requireAuth: function () {
-        if (!Session.isLoggedIn()) {
-            //window.location.href = '/Auth/Login';
-            return false;
+        try {
+            Models.Session.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+            window.location.href = '/Auth/Login';
         }
-        return true;
     },
 
-    _showErr: function (selector, msg) {
-        $(selector).text(msg).addClass('show');
-        setTimeout(function () {
-            $(selector).removeClass('show');
-        }, 3000);
+    // Initialize authentication
+    init: function () {
+        try {
+            this.initLogin();
+
+            // Setup logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logout();
+                });
+            }
+        } catch (error) {
+            console.error('AuthController initialization error:', error);
+        }
     }
 };

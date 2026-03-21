@@ -1,30 +1,34 @@
-﻿$(document).ready(function () {
+﻿// Main application entry point
+(function () {
+    'use strict';
 
-    $("#btnLogin").click(function (e) {
-        e.preventDefault(); // 🔥 prevent form reload
+    // Wait for all dependencies to load
+    function initialize() {
+        try {
+            console.log('Initializing EduAttend AMS...');
 
-        const email = $("#email").val();
+            // Initialize store
+            if (typeof Store !== 'undefined' && typeof Store.init === 'function') {
+                Store.init();
+            }
 
-        if (!email) {
-            alert("Email is required");
-            return;
+            // Initialize page controller if on a page
+            if (typeof PageController !== 'undefined') {
+                if (typeof PageController.init === 'function') {
+                    PageController.init();
+                }
+            }
+
+            console.log('Application initialized successfully');
+        } catch (error) {
+            console.error('Application initialization error:', error);
         }
+    }
 
-        $.post("/Auth/SetSession", {
-            email: email,
-            role: "teacher"
-        })
-            .done(function (res) {
-                console.log("Login success:", res);
-
-                // 🔥 redirect safely
-                window.location.href = "/Student/Index";
-            })
-            .fail(function (err) {
-                console.error("Login failed:", err);
-                alert("Login failed");
-            });
-
-    });
-
-});
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+})();
