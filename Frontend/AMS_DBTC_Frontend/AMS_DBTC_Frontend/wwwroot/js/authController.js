@@ -24,7 +24,7 @@
         }
 
         Session.save(user, role);
-        window.location.href = '/AMS/DashBoard/Index';
+        window.location.href = '/DashBoard/Index';
     },
 
     register: function () {
@@ -72,17 +72,17 @@
         USERS.push(newUser);
 
         Session.save(newUser, role);
-        window.location.href = '/AMS/DashBoard/Index';
+        window.location.href = '/DashBoard/Index';
     },
 
     logout: function () {
         Session.clear();
-        window.location.href = '/AMS/Auth/Login';
+        //window.location.href = '/Auth/Login';
     },
 
     requireAuth: function () {
         if (!Session.isLoggedIn()) {
-            window.location.href = '/AMS/Auth/Login';
+            //window.location.href = '/Auth/Login';
             return false;
         }
         return true;

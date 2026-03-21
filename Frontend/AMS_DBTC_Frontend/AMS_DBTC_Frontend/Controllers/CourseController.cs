@@ -6,7 +6,7 @@ namespace AMS_DBTC_Frontend.Controllers
     {
         public IActionResult Index()
         {
-            return View("~/Views/AMS/Course/Index.cshtml");
+            return View();
         }
     }
 }

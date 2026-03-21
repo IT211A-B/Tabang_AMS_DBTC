@@ -1,27 +1,30 @@
-﻿
-$(document).ready(function () {
+﻿$(document).ready(function () {
 
-    // ── Set topbar date ───────────────────────────────────────
-    $('#topDate').text(Helpers.formatDate());
+    $("#btnLogin").click(function (e) {
+        e.preventDefault(); // 🔥 prevent form reload
 
-    // ── Seed activity log if empty ────────────────────────────
-    if (STATE.activityLog.length === 0) {
-        Helpers.addActivity('🔑', 'System started', 'EduAttend AMS loaded');
-        Helpers.addActivity('📋', 'Attendance ready', "Waiting for today's entries");
-    }
+        const email = $("#email").val();
 
-    // ── ESC key closes any open overlay ──────────────────────
-    $(document).on('keydown', function (e) {
-        if (e.key === 'Escape') {
-            $('.overlay.show').removeClass('show');
+        if (!email) {
+            alert("Email is required");
+            return;
         }
-    });
 
-    // ── Click outside modal closes it ────────────────────────
-    $(document).on('click', '.overlay', function (e) {
-        if ($(e.target).hasClass('overlay')) {
-            $(this).removeClass('show');
-        }
+        $.post("/Auth/SetSession", {
+            email: email,
+            role: "teacher"
+        })
+            .done(function (res) {
+                console.log("Login success:", res);
+
+                // 🔥 redirect safely
+                window.location.href = "/Student/Index";
+            })
+            .fail(function (err) {
+                console.error("Login failed:", err);
+                alert("Login failed");
+            });
+
     });
 
 });

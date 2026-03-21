@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿    using Microsoft.AspNetCore.Mvc;
 
 namespace AMS_DBTC_Frontend.Controllers
 {
@@ -6,17 +6,33 @@ namespace AMS_DBTC_Frontend.Controllers
     {
         public IActionResult Login()
         {
-            return View("~/Views/AMS/Auth/Login.cshtml");
+            if (HttpContext.Session.GetString("UserEmail") != null)
+                return RedirectToAction("Index", "DashBoard");
+
+            return View(); 
         }
 
         public IActionResult Register()
         {
-            return View("~/Views/AMS/Auth/Register.cshtml");
+            return View(); 
+        }
+
+        [HttpPost]
+        public IActionResult SetSession(string email, string role)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest();
+
+            HttpContext.Session.SetString("UserEmail", email);
+            HttpContext.Session.SetString("UserRole", role ?? "teacher");
+
+            return Ok(new { success = true });
         }
 
         public IActionResult Logout()
         {
-            return View("~/Views/AMS/Auth/Login.cshtml");
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login");
         }
     }
 }

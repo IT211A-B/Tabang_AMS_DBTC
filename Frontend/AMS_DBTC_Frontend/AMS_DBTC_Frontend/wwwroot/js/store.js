@@ -22,7 +22,7 @@ var STUDENTS = [
 
 // ── Seed Users ────────────────────────────────────────────────
 var USERS = [
-    new UserModel({ name: 'Ms. Janet Reyes', email: 'teacher@school.edu.ph', pass: 'teacher123', role: 'teacher', section: 'Grade 10 - Section B' }),
+    new UserModel({ name: 'Ms. Janet Reyes', email: 'teacher@school.edu.ph', pass: 'teacher123', role: 'teacher', course: 'BSIT-1' }),
     new UserModel({ name: 'Dr. Ana Reyes', email: 'admin@school.edu.ph', pass: 'admin123', role: 'admin', section: 'All Sections' }),
 ];
 

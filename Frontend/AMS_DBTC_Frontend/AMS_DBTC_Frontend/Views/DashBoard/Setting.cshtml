@@ -1,0 +1,88 @@
+﻿﻿﻿@{
+ViewData["Title"] = "Reports";
+ViewData["Page"] = "rpt";
+ViewData["PageTitle"] = "Reports";
+}
+
+<div class="app-shell">
+
+    @await Html.PartialAsync("_Sidebar")
+
+    <div class="main-area">
+
+        @await Html.PartialAsync("_Topbar")
+
+        <div class="page-wrap page-fade" id="rptPage">
+
+            {{!-- Filters --}}
+            <div class="rpt-filters">
+                <select id="rptP" onchange="RptController.render()">
+                    <option value="month">This Month</option>
+                    <option value="week">This Week</option>
+                    <option value="all">All Time</option>
+                </select>
+                <select>
+                    <option>Grade 10 - Section B</option>
+                    <option>Grade 10 - Section A</option>
+                    <option>All Sections</option>
+                </select>
+                <input type="date" value="2026-02-01" />
+                <input type="date" value="2026-02-28" />
+                <button class="btn btn-primary btn-sm" onclick="RptController.render()">Generate</button>
+                <button class="btn btn-outline btn-sm" onclick="RptController.exportCSV()">Export CSV</button>
+            </div>
+
+            <div class="rpt-grid">
+
+                {{!-- Summary Table --}}
+                <div class="card">
+                    <div class="card-h">
+                        <div>
+                            <h3>Attendance Summary</h3>
+                            <p id="rptLbl">This Month</p>
+                        </div>
+                    </div>
+                    <div style="padding:0;">
+                        <table class="rpt-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Present</th>
+                                    <th>Absent</th>
+                                    <th>Late</th>
+                                    <th>Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rptBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{!-- Right Column --}}
+                <div class="rpt-col">
+
+                    {{!-- Overview bars --}}
+                    <div class="card">
+                        <div class="card-h"><h3>Overview</h3></div>
+                        <div class="card-b" id="rptOv"></div>
+                    </div>
+
+                    {{!-- At-risk --}}
+                    <div class="card">
+                        <div class="card-h">
+                            <div>
+                                <h3>Students at Risk</h3>
+                                <p>Below 75% attendance rate</p>
+                            </div>
+                        </div>
+                        <div class="card-b" id="rptAR"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>{{!-- /page-wrap --}}
+
+    </div>{{!-- /main-area --}}
+</div>{{!-- /app-shell --}}

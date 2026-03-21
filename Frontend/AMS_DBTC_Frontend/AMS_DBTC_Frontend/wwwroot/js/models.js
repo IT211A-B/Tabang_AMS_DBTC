@@ -39,7 +39,7 @@ function UserModel(data) {
     this.email = data.email;
     this.pass = data.pass;
     this.role = data.role || 'teacher';
-    this.section = data.section || 'Grade 10 - Section B';
+    this.section = data.section || 'BSIT-1';
 }
 
 UserModel.prototype.initials = function () {
