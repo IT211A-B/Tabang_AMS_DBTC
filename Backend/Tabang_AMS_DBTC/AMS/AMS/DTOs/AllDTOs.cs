@@ -1,8 +1,4 @@
-﻿// ─────────────────────────────────────────────────────────────────────────────
-//  DTOs — single source of truth for ALL request/response data shapes.
-//  Naming convention: <Entity><Purpose>DTO  (e.g. CreateUserDTO, UserResponseDTO)
-// ─────────────────────────────────────────────────────────────────────────────
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace AMS.DTOs
 {

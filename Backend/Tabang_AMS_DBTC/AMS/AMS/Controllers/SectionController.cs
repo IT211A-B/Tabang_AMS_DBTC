@@ -16,18 +16,39 @@ namespace AMS.Controllers
         private readonly ISectionRepository _sectionRepo;
         private readonly IUserRepository _userRepo;
 
-        public SectionsController(ISectionRepository sectionRepo, IUserRepository userRepo)
+    public SectionsController(ISectionRepository sectionRepo, IUserRepository userRepo)
         {
             _sectionRepo = sectionRepo;
             _userRepo = userRepo;
         }
 
-        /// <summary>Returns all sections with their assigned teacher name.</summary>
+        /// <summary>Returns paginated sections with their assigned teacher name.</summary>
+        /// <param name="pageNumber">Page number (default = 1)</param>
+        /// <param name="pageSize">Number of records per page (default = 10)</param>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SectionResponseDTO>>> GetAll()
+        public async Task<ActionResult<object>> GetAll(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
             var sections = await _sectionRepo.GetAllAsync();
-            return Ok(sections.Select(MapToDTO));
+
+            var totalRecords = sections.Count();
+
+            var paginatedSections = sections
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(MapToDTO);
+
+            var result = new
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalRecords = totalRecords,
+                TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize),
+                Data = paginatedSections
+            };
+
+            return Ok(result);
         }
 
         /// <summary>Gets a single section by ID.</summary>
@@ -94,22 +115,22 @@ namespace AMS.Controllers
         /// <response code="404">No section with that ID.</response>
         [HttpPut("{id:int}")]
         public async Task<ActionResult<SectionResponseDTO>> Update(
-            int id, [FromBody] UpdateSectionDTO dto)
+            int id, [FromBody] UpdateSectionDTO Dto)
         {
             var section = await _sectionRepo.GetByIdAsync(id);
             if (section is null) return NotFound($"Section with ID {id} not found.");
 
-            if (dto.Name is not null) section.Name = dto.Name;
-            if (dto.SchoolYear is not null) section.SchoolYear = dto.SchoolYear;
-            if (dto.Semester is not null) section.Semester = dto.Semester;
+            if (Dto.Name is not null) section.Name = Dto.Name;
+            if (Dto.SchoolYear is not null) section.SchoolYear = Dto.SchoolYear;
+            if (Dto.Semester is not null) section.Semester = Dto.Semester;
 
-            if (dto.UserId.HasValue)
+            if (Dto.UserId.HasValue)
             {
-                var teacher = await _userRepo.GetByIdAsync(dto.UserId.Value);
+                var teacher = await _userRepo.GetByIdAsync(Dto.UserId.Value);
                 if (teacher is null)
-                    return BadRequest($"User (teacher) with ID {dto.UserId} does not exist.");
+                    return BadRequest($"User (teacher) with ID {Dto.UserId} does not exist.");
 
-                section.UserId = dto.UserId.Value;
+                section.UserId = Dto.UserId.Value;
             }
 
             await _sectionRepo.UpdateAsync(section);
