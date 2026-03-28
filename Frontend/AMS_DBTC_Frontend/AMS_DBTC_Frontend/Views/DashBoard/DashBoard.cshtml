@@ -13,8 +13,6 @@ ViewData["PageTitle"] = "Daily Attendance";
         @await Html.PartialAsync("_Topbar")
 
         <div class="page-wrap page-fade" id="attPage">
-
-            {{!-- Mini Stats --}}
             <div class="att-minis">
                 <div class="att-mini">
                     <div class="am-l">Total</div>
@@ -33,8 +31,6 @@ ViewData["PageTitle"] = "Daily Attendance";
                     <div class="am-v" style="color:var(--orange)" id="amL">0</div>
                 </div>
             </div>
-
-            {{!-- Control Bar --}}
             <div class="ctrl">
                 <div>
                     <h2>Attendance Sheet</h2>
@@ -50,8 +46,6 @@ ViewData["PageTitle"] = "Daily Attendance";
                     </button>
                 </div>
             </div>
-
-            {{!-- Table --}}
             <div class="tbl">
                 <div class="tbl-h tbl-grid">
                     <div class="th">#</div>
@@ -63,9 +57,8 @@ ViewData["PageTitle"] = "Daily Attendance";
                 <div id="attRows"></div>
             </div>
 
-        </div>{{!-- /page-wrap --}}
+        </div>
 
-        {{!-- Bottom Submit Bar --}}
         <div class="btm-bar">
             <div class="btm-info">
                 <strong id="attMarked">0</strong> of
@@ -80,8 +73,8 @@ ViewData["PageTitle"] = "Daily Attendance";
             </div>
         </div>
 
-    </div>{{!-- /main-area --}}
-</div>{{!-- /app-shell --}}
+    </div>
+</div>
 
 @section Scripts {
     <script>
