@@ -14,10 +14,10 @@ ViewData["PageTitle"] = "Dashboard";
 
         <div class="page-wrap page-fade" id="dashPage">
 
-            {{!-- Stat Cards --}}
+
             <div class="stat-row">
                 <div class="stat">
-                    <div class="stat-ic ic-b">👥</div>
+                    <div class="stat-ic ic-b"></div>
                     <div>
                         <div class="stat-lbl">Total</div>
                         <div class="stat-val" id="dT">0</div>
@@ -25,7 +25,7 @@ ViewData["PageTitle"] = "Dashboard";
                     </div>
                 </div>
                 <div class="stat">
-                    <div class="stat-ic ic-g">✅</div>
+                    <div class="stat-ic ic-g"></div>
                     <div>
                         <div class="stat-lbl">Present</div>
                         <div class="stat-val" id="dP">0</div>
@@ -33,7 +33,7 @@ ViewData["PageTitle"] = "Dashboard";
                     </div>
                 </div>
                 <div class="stat">
-                    <div class="stat-ic ic-r">❌</div>
+                    <div class="stat-ic ic-r"></div>
                     <div>
                         <div class="stat-lbl">Absent</div>
                         <div class="stat-val" id="dA">0</div>
@@ -41,7 +41,7 @@ ViewData["PageTitle"] = "Dashboard";
                     </div>
                 </div>
                 <div class="stat">
-                    <div class="stat-ic ic-o">⏰</div>
+                    <div class="stat-ic ic-o"></div>
                     <div>
                         <div class="stat-lbl">Late</div>
                         <div class="stat-val" id="dL">0</div>
@@ -50,10 +50,7 @@ ViewData["PageTitle"] = "Dashboard";
                 </div>
             </div>
 
-            {{!-- Two-Column Row --}}
             <div class="two-col">
-
-                {{!-- Weekly Bar Chart --}}
                 <div class="card">
                     <div class="card-h">
                         <div>
@@ -78,7 +75,6 @@ ViewData["PageTitle"] = "Dashboard";
                     </div>
                 </div>
 
-                {{!-- Right: Today + Alerts --}}
                 <div style="display:flex;flex-direction:column;gap:12px;">
                     <div class="card">
                         <div class="card-h"><h3>Today</h3></div>
@@ -104,8 +100,6 @@ ViewData["PageTitle"] = "Dashboard";
                 </div>
 
             </div>
-
-            {{!-- Activity Log --}}
             <div class="card">
                 <div class="card-h">
                     <div><h3>Activity</h3><p>Recent system events</p></div>
@@ -113,6 +107,6 @@ ViewData["PageTitle"] = "Dashboard";
                 <div class="card-b" id="actLog"></div>
             </div>
 
-        </div>{{!-- /page-wrap --}}
-    </div>{{!-- /main-area --}}
-</div>{{!-- /app-shell --}}
+        </div>
+    </div>
+</div>
