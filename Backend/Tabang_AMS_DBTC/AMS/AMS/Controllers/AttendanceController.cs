@@ -17,28 +17,46 @@ namespace AMS.Controllers
         private readonly IStudentRepository _studentRepo;
         private readonly ISectionRepository _sectionRepo;
 
-        public AttendanceController(
-            IAttendanceRepository attendanceRepo,
-            IStudentRepository studentRepo,
-            ISectionRepository sectionRepo)
+    public AttendanceController(
+        IAttendanceRepository attendanceRepo,
+        IStudentRepository studentRepo,
+        ISectionRepository sectionRepo)
         {
             _attendanceRepo = attendanceRepo;
             _studentRepo = studentRepo;
             _sectionRepo = sectionRepo;
         }
 
-        /// <summary>Returns every attendance record in the system.</summary>
+        /// <summary>Returns paginated attendance records.</summary>
+        /// <param name="pageNumber">Page number (default = 1)</param>
+        /// <param name="pageSize">Number of records per page (default = 10)</param>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AttendanceResponseDTO>>> GetAll()
+        public async Task<ActionResult<object>> GetAll(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
             var records = await _attendanceRepo.GetAllAsync();
-            return Ok(records.Select(MapToDTO));
+
+            var totalRecords = records.Count();
+
+            var paginatedRecords = records
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(MapToDTO);
+
+            var result = new
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalRecords = totalRecords,
+                TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize),
+                Data = paginatedRecords
+            };
+
+            return Ok(result);
         }
 
         /// <summary>Gets a single attendance record by ID.</summary>
-        /// <param name="id">The attendance record ID.</param>
-        /// <response code="200">Record found.</response>
-        /// <response code="404">No record with that ID.</response>
         [HttpGet("{id:int}")]
         public async Task<ActionResult<AttendanceResponseDTO>> GetById(int id)
         {
@@ -48,7 +66,6 @@ namespace AMS.Controllers
         }
 
         /// <summary>Returns the full attendance history for a specific student.</summary>
-        /// <param name="studentId">The student's ID.</param>
         [HttpGet("student/{studentId:int}")]
         public async Task<ActionResult<IEnumerable<AttendanceResponseDTO>>> GetByStudent(int studentId)
         {
@@ -57,9 +74,6 @@ namespace AMS.Controllers
         }
 
         /// <summary>Returns all attendance records for a section on a specific date.</summary>
-        /// <param name="sectionId">The section ID.</param>
-        /// <param name="date">The date in YYYY-MM-DD format.</param>
-        /// <response code="200">Records found.</response>
         [HttpGet("section/{sectionId:int}/date/{date}")]
         public async Task<ActionResult<IEnumerable<AttendanceResponseDTO>>> GetBySectionAndDate(
             int sectionId, DateOnly date)
@@ -69,11 +83,6 @@ namespace AMS.Controllers
         }
 
         /// <summary>Returns attendance records for a section within a date range.</summary>
-        /// <param name="sectionId">The section ID.</param>
-        /// <param name="from">Start date (YYYY-MM-DD).</param>
-        /// <param name="to">End date (YYYY-MM-DD).</param>
-        /// <response code="200">Records found.</response>
-        /// <response code="400">'from' date is after 'to' date.</response>
         [HttpGet("section/{sectionId:int}/range")]
         public async Task<ActionResult<IEnumerable<AttendanceResponseDTO>>> GetByRange(
             int sectionId,
@@ -88,13 +97,6 @@ namespace AMS.Controllers
         }
 
         /// <summary>Records new attendance for a student in a section.</summary>
-        /// <remarks>
-        /// Allowed statuses: <b>Present</b>, <b>Absent</b>, <b>Late</b>, <b>Excused</b>.
-        /// Duplicate entries for the same student, section, and date are rejected.
-        /// </remarks>
-        /// <response code="201">Attendance record created successfully.</response>
-        /// <response code="400">Invalid student ID, section ID, or status value.</response>
-        /// <response code="409">A record already exists for this student, section, and date.</response>
         [HttpPost]
         public async Task<ActionResult<AttendanceResponseDTO>> Create(
             [FromBody] CreateAttendanceDTO dto)
@@ -130,11 +132,7 @@ namespace AMS.Controllers
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapToDTO(withNav!));
         }
 
-        /// <summary>Updates an existing attendance record (e.g. correcting Late to Present).</summary>
-        /// <param name="id">The attendance record ID.</param>
-        /// <response code="200">Record updated successfully.</response>
-        /// <response code="400">Invalid status value provided.</response>
-        /// <response code="404">No record with that ID.</response>
+        /// <summary>Updates an existing attendance record.</summary>
         [HttpPut("{id:int}")]
         public async Task<ActionResult<AttendanceResponseDTO>> Update(
             int id, [FromBody] UpdateAttendanceDTO dto)
@@ -161,9 +159,6 @@ namespace AMS.Controllers
         }
 
         /// <summary>Deletes an attendance record by ID.</summary>
-        /// <param name="id">The attendance record ID.</param>
-        /// <response code="204">Deleted successfully.</response>
-        /// <response code="404">No record with that ID.</response>
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
