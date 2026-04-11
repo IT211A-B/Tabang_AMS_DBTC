@@ -6,8 +6,8 @@ namespace AMS_DBTC_Frontend.Controllers
     {
         public IActionResult Index()
         {
-         //if (HttpContext.Session.GetString("UserEmail") == null)
-                //return RedirectToAction("Login", "Auth"); 
+            if (HttpContext.Session.GetString("UserEmail") == null)
+                return RedirectToAction("DashBoard", "DashBoard");
 
             return View(); 
         }

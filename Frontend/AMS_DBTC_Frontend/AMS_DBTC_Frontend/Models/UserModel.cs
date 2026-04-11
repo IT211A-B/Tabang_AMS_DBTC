@@ -1,21 +1,43 @@
-﻿namespace AMS_DBTC_Frontend.Models
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
+using System.Xml.Linq;
+
+namespace AMS_DBTC_Frontend.Models
 {
     public class UserModel
     {
-        public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Pass { get; set; } = string.Empty;
-        public string Role { get; set; } = "teacher";
-        public string Coruse { get; set; } = "BSIT-1";
+        [Required]
+        [StringLength(50)]
+        public string Username { get; set; }
 
-        public string Initials =>
-            string.Concat(
-                Name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        [Required]
+        [StringLength(100)]
+        public string Password { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        public string Role { get; set; } = "Teacher";
+
+        public string Course { get; set; } = "BSIT 1";
+
+        //  Safe initials 
+        public string Initials
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(Username))
+                    return "";
+
+                var parts = Username
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                     .Take(2)
-                    .Select(n => n[0].ToString().ToUpper())
-            );
+                    .Select(n => n[0].ToString().ToUpper());
 
-        public string DisplayRole =>
-            Role == "admin" ? "Administrator" : Coruse;
+                return string.Concat(parts);
+            }
+        }
     }
 }
+

@@ -1,5 +1,5 @@
 ﻿// Page Controller - Main controller for page-specific logic
-window.PageController = {
+/*window.PageController = {
     currentPage: null,
     controllers: {},
 
@@ -108,4 +108,4 @@ PageController.register('dashboard', window.DashController);
 PageController.register('attendance', window.AttController);
 
 // Make AppController reference the page controller
-window.AppController = window.PageController;
+window.AppController = window.PageController;*/

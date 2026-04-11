@@ -1,38 +1,52 @@
-﻿    using Microsoft.AspNetCore.Mvc;
-
+﻿using Microsoft.AspNetCore.Mvc;
+using AMS_DBTC_Frontend.Models.AuthRequest;
 namespace AMS_DBTC_Frontend.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class AuthController : Controller
     {
-        public IActionResult Login()
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginRequest model)
         {
-            if (HttpContext.Session.GetString("UserEmail") != null)
-                return RedirectToAction("Index", "DashBoard");
-
-            return View(); 
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Username and password are required"
+                });
+            }
+            if (model.Username == "admin" && model.Password == "1234")
+            {
+                HttpContext.Session.SetString("UserEmail", model.Username);
+                return Ok(new
+                {
+                    success = true,
+                    user = new { username = model.Username },
+                    redirect = "Dashboard/Index"
+                });
+            }
+            return Unauthorized(new
+            {
+                success = false,
+                message = "Invalid credentials"
+            });
         }
 
-        public IActionResult Register()
-        {
-            return View(); 
+        public IActionResult Register() { 
+            return Ok(new
+            {
+                success = true,
+                message = "Regester endpoint is working"
+            });
         }
 
-        [HttpPost]
-        public IActionResult SetSession(string email, string role)
-        {
-            if (string.IsNullOrEmpty(email))
-                return BadRequest();
-
-            HttpContext.Session.SetString("UserEmail", email);
-            HttpContext.Session.SetString("UserRole", role ?? "teacher");
-
-            return Ok(new { success = true });
-        }
-
+        [HttpPost("logout")]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            return Ok(new { success = true });
         }
     }
 }
