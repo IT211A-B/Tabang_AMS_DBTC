@@ -1,13 +1,12 @@
 ﻿using AMS.DTOs;
 using AMS.Interfaces;
 using AMS.Models;
-using AMS.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMS.Controllers
 {
     /// <summary>
-    /// Manages sections and their assigned teachers.
+    /// API for managing sections and assigned teachers.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -16,84 +15,74 @@ namespace AMS.Controllers
         private readonly ISectionRepository _sectionRepo;
         private readonly IUserRepository _userRepo;
 
-    public SectionsController(ISectionRepository sectionRepo, IUserRepository userRepo)
+        public SectionsController(ISectionRepository sectionRepo, IUserRepository userRepo)
         {
             _sectionRepo = sectionRepo;
             _userRepo = userRepo;
         }
 
-        /// <summary>Returns paginated sections with their assigned teacher name.</summary>
+        /// <summary>
+        /// Get paginated sections with optional search filters.
+        /// </summary>
+        /// <param name="name">Filter by section name</param>
+        /// <param name="teacherId">Filter by teacher ID</param>
+        /// <param name="schoolYear">Filter by school year</param>
         /// <param name="pageNumber">Page number (default = 1)</param>
-        /// <param name="pageSize">Number of records per page (default = 10)</param>
+        /// <param name="pageSize">Records per page (default = 10)</param>
+        /// <response code="200">Returns paginated section list</response>
         [HttpGet]
-        public async Task<ActionResult<object>> GetAll(
+        public async Task<ActionResult<object>> Get(
+            [FromQuery] string? name = null,
+            [FromQuery] int? teacherId = null,
+            [FromQuery] string? schoolYear = null,
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
+            if (pageNumber < 1 || pageSize < 1)
+                return BadRequest("PageNumber and PageSize must be greater than 0.");
+
             var sections = await _sectionRepo.GetAllAsync();
 
-            var totalRecords = sections.Count();
+            if (!string.IsNullOrWhiteSpace(name))
+                sections = sections.Where(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
 
-            var paginatedSections = sections
+            if (teacherId.HasValue)
+                sections = sections.Where(s => s.UserId == teacherId);
+
+            if (!string.IsNullOrWhiteSpace(schoolYear))
+                sections = sections.Where(s => s.SchoolYear == schoolYear);
+
+            var total = sections.Count();
+
+            var data = sections
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .Select(MapToDTO);
 
-            var result = new
+            return Ok(new
             {
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalRecords = totalRecords,
-                TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize),
-                Data = paginatedSections
-            };
-
-            return Ok(result);
+                pageNumber,
+                pageSize,
+                totalRecords = total,
+                totalPages = (int)Math.Ceiling(total / (double)pageSize),
+                data
+            });
         }
 
-        /// <summary>Gets a single section by ID.</summary>
-        /// <param name="id">The section ID.</param>
-        /// <response code="200">Section found.</response>
-        /// <response code="404">No section with that ID.</response>
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<SectionResponseDTO>> GetById(int id)
-        {
-            var section = await _sectionRepo.GetByIdAsync(id);
-            if (section is null) return NotFound($"Section with ID {id} not found.");
-            return Ok(MapToDTO(section));
-        }
-
-        /// <summary>Returns a section together with its full enrolled student list.</summary>
-        /// <param name="id">The section ID.</param>
-        /// <response code="200">Section with students found.</response>
-        /// <response code="404">No section with that ID.</response>
-        [HttpGet("{id:int}/students")]
-        public async Task<ActionResult<SectionResponseDTO>> GetWithStudents(int id)
-        {
-            var section = await _sectionRepo.GetWithStudentsAsync(id);
-            if (section is null) return NotFound($"Section with ID {id} not found.");
-            return Ok(MapToDTO(section));
-        }
-
-        /// <summary>Returns all sections assigned to a specific teacher.</summary>
-        /// <param name="userId">The teacher's user ID.</param>
-        [HttpGet("teacher/{userId:int}")]
-        public async Task<ActionResult<IEnumerable<SectionResponseDTO>>> GetByTeacher(int userId)
-        {
-            var sections = await _sectionRepo.GetByUserIdAsync(userId);
-            return Ok(sections.Select(MapToDTO));
-        }
-
-        /// <summary>Creates a new section and assigns it to a teacher.</summary>
-        /// <response code="201">Section created successfully.</response>
-        /// <response code="400">The provided teacher user ID does not exist.</response>
+        /// <summary>
+        /// Create a new section.
+        /// </summary>
+        /// <response code="201">Section created</response>
+        /// <response code="400">Invalid teacher ID</response>
         [HttpPost]
-        public async Task<ActionResult<SectionResponseDTO>> Create(
-            [FromBody] CreateSectionDTO dto)
+        public async Task<ActionResult<SectionResponseDTO>> Post([FromBody] CreateSectionDTO dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                return BadRequest("Section name is required.");
+
             var teacher = await _userRepo.GetByIdAsync(dto.UserId);
             if (teacher is null)
-                return BadRequest($"User (teacher) with ID {dto.UserId} does not exist.");
+                return BadRequest($"Teacher with ID {dto.UserId} not found.");
 
             var section = new Section
             {
@@ -104,53 +93,61 @@ namespace AMS.Controllers
             };
 
             var created = await _sectionRepo.CreateAsync(section);
-            var withUser = await _sectionRepo.GetByIdAsync(created.Id);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapToDTO(withUser!));
+            return Ok(MapToDTO(created));
         }
 
-        /// <summary>Partially or fully updates a section.</summary>
-        /// <param name="id">The section ID.</param>
-        /// <response code="200">Section updated successfully.</response>
-        /// <response code="400">The provided teacher user ID does not exist.</response>
-        /// <response code="404">No section with that ID.</response>
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<SectionResponseDTO>> Update(
-            int id, [FromBody] UpdateSectionDTO Dto)
+        /// <summary>
+        /// Update a section.
+        /// </summary>
+        /// <param name="id">Section ID</param>
+        /// <response code="200">Section updated</response>
+        /// <response code="404">Section not found</response>
+        [HttpPut("{id}")]
+        public async Task<ActionResult<SectionResponseDTO>> Put(int id, [FromBody] UpdateSectionDTO dto)
         {
             var section = await _sectionRepo.GetByIdAsync(id);
-            if (section is null) return NotFound($"Section with ID {id} not found.");
+            if (section is null) return NotFound($"Section {id} not found.");
 
-            if (Dto.Name is not null) section.Name = Dto.Name;
-            if (Dto.SchoolYear is not null) section.SchoolYear = Dto.SchoolYear;
-            if (Dto.Semester is not null) section.Semester = Dto.Semester;
+            if (!string.IsNullOrWhiteSpace(dto.Name))
+                section.Name = dto.Name;
 
-            if (Dto.UserId.HasValue)
+            if (!string.IsNullOrWhiteSpace(dto.SchoolYear))
+                section.SchoolYear = dto.SchoolYear;
+
+            if (!string.IsNullOrWhiteSpace(dto.Semester))
+                section.Semester = dto.Semester;
+
+            if (dto.UserId.HasValue)
             {
-                var teacher = await _userRepo.GetByIdAsync(Dto.UserId.Value);
+                var teacher = await _userRepo.GetByIdAsync(dto.UserId.Value);
                 if (teacher is null)
-                    return BadRequest($"User (teacher) with ID {Dto.UserId} does not exist.");
+                    return BadRequest($"Teacher {dto.UserId} not found.");
 
-                section.UserId = Dto.UserId.Value;
+                section.UserId = dto.UserId.Value;
             }
 
             await _sectionRepo.UpdateAsync(section);
-
-            var updated = await _sectionRepo.GetByIdAsync(id);
-            return Ok(MapToDTO(updated!));
+            return Ok(MapToDTO(section));
         }
 
-        /// <summary>Deletes a section by ID.</summary>
-        /// <param name="id">The section ID.</param>
-        /// <response code="204">Deleted successfully.</response>
-        /// <response code="404">No section with that ID.</response>
-        [HttpDelete("{id:int}")]
+        /// <summary>
+        /// Delete a section.
+        /// </summary>
+        /// <param name="id">Section ID</param>
+        /// <response code="204">Deleted successfully</response>
+        /// <response code="404">Section not found</response>
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _sectionRepo.DeleteAsync(id);
-            if (!deleted) return NotFound($"Section with ID {id} not found.");
+            if (!deleted) return NotFound($"Section {id} not found.");
+
             return NoContent();
         }
 
+        /// <summary>
+        /// Maps Section model to response DTO.
+        /// </summary>
         private static SectionResponseDTO MapToDTO(Section s) => new()
         {
             Id = s.Id,
@@ -158,9 +155,7 @@ namespace AMS.Controllers
             SchoolYear = s.SchoolYear,
             Semester = s.Semester,
             UserId = s.UserId,
-            TeacherName = s.User is not null
-                               ? $"{s.User.FirstName} {s.User.LastName}"
-                               : string.Empty,
+            TeacherName = s.User != null ? $"{s.User.FirstName} {s.User.LastName}" : "",
             StudentCount = s.Students?.Count ?? 0,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt

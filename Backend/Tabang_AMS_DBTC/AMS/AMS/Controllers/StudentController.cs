@@ -1,13 +1,13 @@
 ﻿using AMS.DTOs;
 using AMS.Interfaces;
 using AMS.Models;
-using AMS.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMS.Controllers
 {
     /// <summary>
-    /// Manages student enrollment and records across sections.
+    /// API for managing students and their section enrollment.
+    /// Supports searching and pagination.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -22,60 +22,71 @@ namespace AMS.Controllers
             _sectionRepo = sectionRepo;
         }
 
-        /// <summary>Returns all students across all sections.</summary>
+        /// <summary>
+        /// Get students with pagination and optional search filters.
+        /// </summary>
+        /// <param name="name">Search by first or last name</param>
+        /// <param name="sectionId">Filter by section</param>
+        /// <param name="page">Page number (default = 1)</param>
+        /// <param name="pageSize">Number of records per page (default = 10)</param>
+        /// <response code="200">Returns paginated students</response>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StudentResponseDTO>>> GetAll()
+        public async Task<ActionResult<IEnumerable<StudentResponseDTO>>> Get(
+            [FromQuery] string? name = null,
+            [FromQuery] int? sectionId = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
+            if (page <= 0 || pageSize <= 0)
+                return BadRequest("Page and pageSize must be greater than 0.");
+
             var students = await _studentRepo.GetAllAsync();
-            return Ok(students.Select(MapToDTO));
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(name))
+                students = students.Where(s =>
+                    (s.FirstName + " " + s.LastName)
+                    .Contains(name, StringComparison.OrdinalIgnoreCase));
+
+            if (sectionId.HasValue)
+                students = students.Where(s => s.SectionId == sectionId);
+
+            // Pagination
+            var result = students
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(MapToDTO);
+
+            return Ok(result);
         }
 
-        /// <summary>Gets a single student by ID.</summary>
-        /// <param name="id">The student ID.</param>
-        /// <response code="200">Student found.</response>
-        /// <response code="404">No student with that ID.</response>
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<StudentResponseDTO>> GetById(int id)
-        {
-            var student = await _studentRepo.GetByIdAsync(id);
-            if (student is null) return NotFound($"Student with ID {id} not found.");
-            return Ok(MapToDTO(student));
-        }
-
-        /// <summary>Returns all students enrolled in a specific section.</summary>
-        /// <param name="sectionId">The section ID.</param>
-        [HttpGet("section/{sectionId:int}")]
-        public async Task<ActionResult<IEnumerable<StudentResponseDTO>>> GetBySection(int sectionId)
-        {
-            var students = await _studentRepo.GetBySectionIdAsync(sectionId);
-            return Ok(students.Select(MapToDTO));
-        }
-
-        /// <summary>Case-insensitive partial name search across all students.</summary>
-        /// <param name="name">Partial or full name to search for.</param>
-        /// <response code="200">Matching students returned.</response>
-        /// <response code="400">The name query parameter is missing or empty.</response>
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<StudentResponseDTO>>> Search(
-            [FromQuery] string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return BadRequest("Query parameter 'name' is required.");
-
-            var students = await _studentRepo.SearchByNameAsync(name);
-            return Ok(students.Select(MapToDTO));
-        }
-
-        /// <summary>Enrolls a new student into a section.</summary>
-        /// <response code="201">Student created and enrolled successfully.</response>
-        /// <response code="400">The provided section ID does not exist.</response>
+        /// <summary>
+        /// Create a new student.
+        /// </summary>
+        /// <remarks>
+        /// Example request:
+        /// 
+        /// POST /api/students
+        /// 
+        /// {
+        ///   "FirstName": "Juan",
+        ///   "LastName": "Dela Cruz",
+        ///   "StudentNumber": "01",
+        ///   "Email": "juan@email.com",
+        ///   "SectionId": 1
+        /// }
+        /// </remarks>
+        /// <response code="201">Student successfully created</response>
+        /// <response code="400">Invalid input or section not found</response>
         [HttpPost]
-        public async Task<ActionResult<StudentResponseDTO>> Create(
-            [FromBody] CreateStudentDTO dto)
+        public async Task<ActionResult<StudentResponseDTO>> Post([FromBody] CreateStudentDTO dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var section = await _sectionRepo.GetByIdAsync(dto.SectionId);
             if (section is null)
-                return BadRequest($"Section with ID {dto.SectionId} does not exist.");
+                return BadRequest("Invalid SectionId.");
 
             var student = new Student
             {
@@ -87,54 +98,65 @@ namespace AMS.Controllers
             };
 
             var created = await _studentRepo.CreateAsync(student);
-            var withSection = await _studentRepo.GetByIdAsync(created.Id);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapToDTO(withSection!));
+
+            return CreatedAtAction(nameof(Get),
+                new { id = created.Id },
+                MapToDTO(created));
         }
 
-        /// <summary>Partially or fully updates a student record.</summary>
-        /// <param name="id">The student ID.</param>
-        /// <response code="200">Student updated successfully.</response>
-        /// <response code="400">The provided section ID does not exist.</response>
-        /// <response code="404">No student with that ID.</response>
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<StudentResponseDTO>> Update(
-            int id, [FromBody] UpdateStudentDTO dto)
+        /// <summary>
+        /// Update an existing student.
+        /// </summary>
+        /// <param name="id">Student ID</param>
+        /// <response code="200">Student updated</response>
+        /// <response code="404">Student not found</response>
+        /// <response code="400">Invalid data</response>
+        [HttpPut("{id}")]
+        public async Task<ActionResult<StudentResponseDTO>> Put(int id, [FromBody] UpdateStudentDTO dto)
         {
             var student = await _studentRepo.GetByIdAsync(id);
-            if (student is null) return NotFound($"Student with ID {id} not found.");
-
-            if (dto.FirstName is not null) student.FirstName = dto.FirstName;
-            if (dto.LastName is not null) student.LastName = dto.LastName;
-            if (dto.StudentNumber is not null) student.StudentNumber = dto.StudentNumber;
-            if (dto.Email is not null) student.Email = dto.Email;
+            if (student == null)
+                return NotFound("Student not found.");
 
             if (dto.SectionId.HasValue)
             {
                 var section = await _sectionRepo.GetByIdAsync(dto.SectionId.Value);
-                if (section is null)
-                    return BadRequest($"Section with ID {dto.SectionId} does not exist.");
+                if (section == null)
+                    return BadRequest("Invalid SectionId.");
 
                 student.SectionId = dto.SectionId.Value;
             }
 
+            student.FirstName = dto.FirstName ?? student.FirstName;
+            student.LastName = dto.LastName ?? student.LastName;
+            student.Email = dto.Email ?? student.Email;
+            student.StudentNumber = dto.StudentNumber ?? student.StudentNumber;
+
             await _studentRepo.UpdateAsync(student);
 
-            var updated = await _studentRepo.GetByIdAsync(id);
-            return Ok(MapToDTO(updated!));
+            return Ok(MapToDTO(student));
         }
 
-        /// <summary>Deletes a student and cascades to their attendance records.</summary>
-        /// <param name="id">The student ID.</param>
-        /// <response code="204">Deleted successfully.</response>
-        /// <response code="404">No student with that ID.</response>
-        [HttpDelete("{id:int}")]
+        /// <summary>
+        /// Delete a student by ID.
+        /// </summary>
+        /// <param name="id">Student ID</param>
+        /// <response code="204">Student deleted</response>
+        /// <response code="404">Student not found</response>
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var deleted = await _studentRepo.DeleteAsync(id);
-            if (!deleted) return NotFound($"Student with ID {id} not found.");
+
+            if (!deleted)
+                return NotFound("Student not found.");
+
             return NoContent();
         }
 
+        /// <summary>
+        /// Converts Student entity to DTO response.
+        /// </summary>
         private static StudentResponseDTO MapToDTO(Student s) => new()
         {
             Id = s.Id,
@@ -143,7 +165,7 @@ namespace AMS.Controllers
             StudentNumber = s.StudentNumber,
             Email = s.Email,
             SectionId = s.SectionId,
-            SectionName = s.Section?.Name ?? string.Empty,
+            SectionName = s.Section?.Name ?? "",
             TotalPresent = s.Attendances.Count(a => a.Status == "Present"),
             TotalAbsent = s.Attendances.Count(a => a.Status == "Absent"),
             TotalLate = s.Attendances.Count(a => a.Status == "Late"),

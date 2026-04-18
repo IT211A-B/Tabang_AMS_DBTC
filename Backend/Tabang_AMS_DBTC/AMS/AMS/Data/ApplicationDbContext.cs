@@ -10,8 +10,9 @@ namespace AMS.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        // DbSet for each entity — maps to corresponding PostgreSQL tables
+        // ── DbSets (Tables) ───────────────────────────────────────
         public DbSet<User> Users { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }  
         public DbSet<Section> Sections { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
@@ -31,6 +32,30 @@ namespace AMS.Data
                       .HasDefaultValue("Teacher");
             });
 
+            // ── Teacher ────────────────────────────────────────────
+            modelBuilder.Entity<Teacher>(entity =>
+            {
+                // Email must be unique
+                entity.HasIndex(t => t.Email).IsUnique();
+
+                entity.Property(t => t.FirstName)
+                      .IsRequired()
+                      .HasMaxLength(50);
+
+                entity.Property(t => t.LastName)
+                      .IsRequired()
+                      .HasMaxLength(50);
+
+                entity.Property(t => t.Email)
+                      .IsRequired();
+
+                entity.Property(t => t.Phone)
+                      .HasMaxLength(20);
+
+                entity.Property(t => t.Department)
+                      .HasMaxLength(100);
+            });
+
             // ── Section ────────────────────────────────────────────
             modelBuilder.Entity<Section>(entity =>
             {
@@ -38,7 +63,13 @@ namespace AMS.Data
                 entity.HasOne(s => s.User)
                       .WithMany(u => u.Sections)
                       .HasForeignKey(s => s.UserId)
-                      .OnDelete(DeleteBehavior.Restrict); // prevent cascade-deleting teacher's sections
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // OPTIONAL: Section linked to Teacher table
+                entity.HasOne(s => s.Teacher)
+                      .WithMany()
+                      .HasForeignKey(s => s.TeacherId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             // ── Student ────────────────────────────────────────────
@@ -48,23 +79,23 @@ namespace AMS.Data
                 entity.HasOne(st => st.Section)
                       .WithMany(s => s.Students)
                       .HasForeignKey(st => st.SectionId)
-                      .OnDelete(DeleteBehavior.Cascade); // removing a section removes its students
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // ── Attendance ─────────────────────────────────────────
             modelBuilder.Entity<Attendance>(entity =>
             {
-                // One student should have at most one attendance record per section per date
+                // Unique constraint per student per day per section
                 entity.HasIndex(a => new { a.StudentId, a.SectionId, a.Date })
                       .IsUnique();
 
-                // Attendance links to a student
+                // Attendance → Student
                 entity.HasOne(a => a.Student)
                       .WithMany(st => st.Attendances)
                       .HasForeignKey(a => a.StudentId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Attendance links to a section
+                // Attendance → Section
                 entity.HasOne(a => a.Section)
                       .WithMany(s => s.Attendances)
                       .HasForeignKey(a => a.SectionId)
