@@ -1,5 +1,5 @@
 ﻿// Main application entry point
-(function () {
+/*(function () {
     'use strict';
 
     // Wait for all dependencies to load
@@ -31,4 +31,4 @@
     } else {
         initialize();
     }
-})();
+})();*/
