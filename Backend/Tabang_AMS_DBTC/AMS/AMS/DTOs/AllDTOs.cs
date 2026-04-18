@@ -274,4 +274,57 @@ namespace AMS.DTOs
         public string Description { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
     }
+
+    // ══════════════════════════════════════════════════
+    //  TEACHER DTOs
+    // ══════════════════════════════════════════════════
+
+    public class CreateTeacherDTO
+    {
+        [Required][MaxLength(100)] public string FirstName { get; set; } = string.Empty;
+        [Required][MaxLength(100)] public string LastName { get; set; } = string.Empty;
+
+        [Required, EmailAddress, MaxLength(200)]
+        public string Email { get; set; } = string.Empty;
+
+        [MaxLength(20)] public string? Phone { get; set; }
+        [MaxLength(100)] public string? Department { get; set; }
+    }
+
+    public class UpdateTeacherDTO
+    {
+        [MaxLength(100)] public string? FirstName { get; set; }
+        [MaxLength(100)] public string? LastName { get; set; }
+
+        [EmailAddress, MaxLength(200)]
+        public string? Email { get; set; }
+
+        [MaxLength(20)] public string? Phone { get; set; }
+        [MaxLength(100)] public string? Department { get; set; }
+    }
+
+    public class TeacherDTO
+    {
+        [Required][MaxLength(100)] public string FirstName { get; set; } = string.Empty;
+        [Required][MaxLength(100)] public string LastName { get; set; } = string.Empty;
+
+        [Required, EmailAddress, MaxLength(200)]
+        public string Email { get; set; } = string.Empty;
+
+        [MaxLength(20)] public string? Phone { get; set; }
+        [MaxLength(100)] public string? Department { get; set; }
+    }
+
+    public class TeacherResponseDTO
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string FullName => $"{FirstName} {LastName}";
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Department { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+    }
 }

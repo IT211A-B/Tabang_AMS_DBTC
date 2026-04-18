@@ -126,4 +126,17 @@ namespace AMS.Interfaces
         // Returns today's stats, weekly trends, and alerts for a section
         Task<DashboardDTO> GetDashboardAsync(int sectionId);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  TEACHER service
+    // ─────────────────────────────────────────────────────────────────────────
+    public interface ITeacherService
+    {
+        Task<IEnumerable<TeacherResponseDTO>> GetAllAsync();
+        Task<TeacherResponseDTO?> GetByIdAsync(int id);
+        Task<TeacherResponseDTO?> GetByEmailAsync(string email);
+        Task<TeacherResponseDTO> CreateAsync(CreateTeacherDTO dto);
+        Task<TeacherResponseDTO?> UpdateAsync(int id, UpdateTeacherDTO dto);
+        Task<bool> DeleteAsync(int id);
+    }
 }

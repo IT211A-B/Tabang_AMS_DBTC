@@ -2,14 +2,13 @@
 using AMS.Helpers;
 using AMS.Interfaces;
 using AMS.Models;
-using AMS.Repositories;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AMS.Controllers
 {
     /// <summary>
-    /// Manages user accounts including teachers and admins.
+    /// API for managing system users such as Teachers and Admins.
+    /// Supports pagination, searching, and CRUD operations.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -22,57 +21,59 @@ namespace AMS.Controllers
             _userRepo = userRepo;
         }
 
-        /// <summary>Returns all users. Password hash is never included in the response.</summary>
+        /// <summary>
+        /// Gets a paginated list of users.
+        /// </summary>
+        /// <param name="email">Search by email</param>
+        /// <param name="name">Search by first or last name</param>
+        /// <param name="pageNumber">Page number (default = 1)</param>
+        /// <param name="pageSize">Number of records per page (default = 10)</param>
+        /// <returns>Paginated list of users</returns>
+        /// <response code="200">Users retrieved successfully</response>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetAll()
+        public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetUsers(
+            string? email = null,
+            string? role = null,
+            string? name = null,
+            int pageNumber = 1,
+            int pageSize = 10)
         {
             var users = await _userRepo.GetAllAsync();
-            return Ok(users.Select(MapToDTO));
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(email))
+                users = users.Where(u => u.Email.Contains(email, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(name))
+                users = users.Where(u =>
+                    u.FirstName.Contains(name, StringComparison.OrdinalIgnoreCase) ||
+                    u.LastName.Contains(name, StringComparison.OrdinalIgnoreCase));
+
+            // Pagination
+            var pagedUsers = users
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(MapToDTO);
+
+            return Ok(pagedUsers);
         }
 
-        /// <summary>Gets a single user by ID.</summary>
-        /// <param name="id">The user ID.</param>
-        /// <response code="200">User found.</response>
-        /// <response code="404">No user with that ID.</response>
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<UserResponseDTO>> GetById(int id)
-        {
-            var user = await _userRepo.GetByIdAsync(id);
-            if (user is null) return NotFound($"User with ID {id} not found.");
-            return Ok(MapToDTO(user));
-        }
-
-        /// <summary>Looks up a user by their email address.</summary>
-        /// <param name="email">The user's email address.</param>
-        /// <response code="200">User found.</response>
-        /// <response code="404">No user with that email.</response>
-        [HttpGet("email/{email}")]
-        public async Task<ActionResult<UserResponseDTO>> GetByEmail(string email)
-        {
-            var user = await _userRepo.GetByEmailAsync(email);
-            if (user is null) return NotFound($"No user found with email '{email}'.");
-            return Ok(MapToDTO(user));
-        }
-
-        /// <summary>Returns all users with a given role.</summary>
-        /// <param name="role">The role to filter by — either <c>Teacher</c> or <c>Admin</c>.</param>
-        [HttpGet("role/{role}")]
-        public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetByRole(string role)
-        {
-            var users = await _userRepo.GetByRoleAsync(role);
-            return Ok(users.Select(MapToDTO));
-        }
-
-        /// <summary>Creates a new user account. The password is hashed before storage.</summary>
-        /// <response code="201">User created successfully.</response>
-        /// <response code="409">A user with that email already exists.</response>
+        /// <summary>
+        /// Creates a new user account.
+        /// </summary>
+        /// <param name="dto">User creation data</param>
+        /// <response code="201">User created successfully</response>
+        /// <response code="409">Email already exists</response>
+        /// <response code="400">Invalid input</response>
         [HttpPost]
-        public async Task<ActionResult<UserResponseDTO>> Create(
-            [FromBody] CreateUserDTO dto)
+        public async Task<ActionResult<UserResponseDTO>> CreateUser([FromBody] CreateUserDTO dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var existing = await _userRepo.GetByEmailAsync(dto.Email);
-            if (existing is not null)
-                return Conflict($"A user with email '{dto.Email}' already exists.");
+            if (existing != null)
+                return Conflict($"User with email '{dto.Email}' already exists.");
 
             var user = new User
             {
@@ -84,55 +85,71 @@ namespace AMS.Controllers
             };
 
             var created = await _userRepo.CreateAsync(user);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, MapToDTO(created));
+
+            return Created("", MapToDTO(created));
         }
 
-        /// <summary>Partially or fully updates a user account.</summary>
-        /// <remarks>Password is only re-hashed if a new value is provided in the request body.</remarks>
-        /// <param name="id">The user ID.</param>
-        /// <response code="200">User updated successfully.</response>
-        /// <response code="404">No user with that ID.</response>
-        /// <response code="409">The new email is already in use by another user.</response>
-        [HttpPut("{id:int}")]
-        public async Task<ActionResult<UserResponseDTO>> Update(
-            int id, [FromBody] UpdateUserDTO dto)
+        /// <summary>
+        /// Updates an existing user.
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <param name="dto">Updated user data</param>
+        /// <response code="200">User updated</response>
+        /// <response code="404">User not found</response>
+        /// <response code="409">Email already used</response>
+        [HttpPut("{id}")]
+        public async Task<ActionResult<UserResponseDTO>> UpdateUser(int id, [FromBody] UpdateUserDTO dto)
         {
             var user = await _userRepo.GetByIdAsync(id);
-            if (user is null) return NotFound($"User with ID {id} not found.");
+            if (user == null)
+                return NotFound($"User with ID {id} not found.");
 
-            if (dto.FirstName is not null) user.FirstName = dto.FirstName;
-            if (dto.LastName is not null) user.LastName = dto.LastName;
+            if (!string.IsNullOrWhiteSpace(dto.FirstName))
+                user.FirstName = dto.FirstName;
 
-            if (dto.Email is not null)
+            if (!string.IsNullOrWhiteSpace(dto.LastName))
+                user.LastName = dto.LastName;
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
             {
                 var emailOwner = await _userRepo.GetByEmailAsync(dto.Email);
-                if (emailOwner is not null && emailOwner.Id != id)
-                    return Conflict($"Email '{dto.Email}' is already in use.");
+                if (emailOwner != null && emailOwner.Id != id)
+                    return Conflict("Email already used by another user.");
 
                 user.Email = dto.Email;
             }
 
-            if (dto.Password is not null)
+            if (!string.IsNullOrWhiteSpace(dto.Password))
                 user.PasswordHash = PasswordHelper.HashPassword(dto.Password);
 
-            if (dto.Role is not null) user.Role = dto.Role;
+            if (!string.IsNullOrWhiteSpace(dto.Role))
+                user.Role = dto.Role;
 
             var updated = await _userRepo.UpdateAsync(user);
+
             return Ok(MapToDTO(updated));
         }
 
-        /// <summary>Deletes a user account by ID.</summary>
-        /// <param name="id">The user ID.</param>
-        /// <response code="204">Deleted successfully.</response>
-        /// <response code="404">No user with that ID.</response>
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        /// <summary>
+        /// Deletes a user.
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <response code="204">User deleted</response>
+        /// <response code="404">User not found</response>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
         {
             var deleted = await _userRepo.DeleteAsync(id);
-            if (!deleted) return NotFound($"User with ID {id} not found.");
+
+            if (!deleted)
+                return NotFound($"User with ID {id} not found.");
+
             return NoContent();
         }
 
+        /// <summary>
+        /// Converts User model to response DTO.
+        /// </summary>
         private static UserResponseDTO MapToDTO(User u) => new()
         {
             Id = u.Id,

@@ -29,11 +29,12 @@ namespace AMS.Models
         [Column("semester")]
         public string Semester { get; set; } = string.Empty;
 
-        // Foreign key — the teacher (user) assigned to this section
+        // Foreign key — the teacher (User with Role = "Teacher")
+        [Required]
         [Column("user_id")]
         public int UserId { get; set; }
 
-        // Navigation: the teacher who owns this section
+        // Navigation: the teacher (User)
         [ForeignKey("UserId")]
         public User? User { get; set; }
 
