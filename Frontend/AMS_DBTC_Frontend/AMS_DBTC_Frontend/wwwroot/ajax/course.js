@@ -1,163 +1,215 @@
-﻿var CourseController = {
+﻿var couController = {
 
+    _data: [],
+    _page: 1,
+    _perPage: 12,
+    _total: 0,
+
+    // Load all sections 
+    load: function () {
+        $('#sectionGrid').html('<p style="color:var(--g400);font-size:12px;">Loading sections...</p>');
+
+        var url = '/sections?pageNumber=' + SecController._page + '&pageSize=' + SecController._perPage;
+        Api.get(url, function (data) {
+            SecController._data = data.data || data;
+            SecController._total = data.totalRecords || SecController._data.length;
+            SecController.render(SecController._data);
+            SecController._renderPagination();
+        }, function (err) {
+            $('#sectionGrid').html('<p style="color:var(--red);font-size:12px;">Failed to load sections: ' + err + '</p>');
+        });
+    },
+
+    // Render section cards 
     render: function (list) {
-        list = list || COURSES;
-        var html = '';
-        $.each(list, function (i, c) {
-            var enrolled = $.grep(STUDENTS, function (s) { return s.courseId === c.id; });
-            var tName = '—';
-            $.each(TEACHERS, function (j, t) { if (t.id === c.teacherId) { tName = t.name; return false; } });
+        if (!list || !list.length) {
+            $('#sectionGrid').html('<p style="color:var(--g400);font-size:12px;">No sections found.</p>');
+            return;
+        }
 
-            var avatars = '';
-            $.each(enrolled.slice(0, 5), function (j, s) {
-                avatars += '<div class="stu-av" style="width:26px;height:26px;font-size:10px;background:' +
-                    s.color + ';margin-left:-6px;border:2px solid var(--white);">' + s.initials() + '</div>';
-            });
-            if (enrolled.length > 5) {
-                avatars += '<div class="stu-av" style="width:26px;height:26px;font-size:9px;background:var(--g300);' +
-                    'color:var(--g700);margin-left:-6px;border:2px solid var(--white);">+' + (enrolled.length - 5) + '</div>';
-            }
+        var html = '';
+        $.each(list, function (i, sec) {
+            var color = SecController._color(sec.id);
 
             html += '<div class="stu-card">' +
                 '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
-                '<div style="width:40px;height:40px;border-radius:10px;background:' + c.color + ';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;"></div>' +
-                '<div><div class="stu-nm">' + c.name + '</div><div class="stu-sid">' + c.code + '</div></div>' +
+                '<div style="width:40px;height:40px;border-radius:10px;background:' + color + ';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🏫</div>' +
+                '<div>' +
+                '<div class="stu-nm">' + sec.name + '</div>' +
+                '<div class="stu-sid">' + sec.schoolYear + ' · ' + sec.semester + '</div>' +
                 '</div>' +
-                '<div style="font-size:11px;color:var(--g500);margin-bottom:6px;"> ' + tName + '</div>' +
-                '<div style="font-size:11px;color:var(--g400);margin-bottom:10px;">' + c.description + '</div>' +
-                '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">' +
-                (avatars || '<span style="font-size:11px;color:var(--g400);">No students yet</span>') +
                 '</div>' +
+                '<div style="font-size:11px;color:var(--g500);margin-bottom:8px;">👨‍🏫 ' + (sec.teacherName || '—') + '</div>' +
                 '<div class="stu-stats" style="margin-bottom:10px;">' +
-                '<div class="stu-s"><div class="stu-sv" style="color:var(--blue)">' + enrolled.length + '</div><div class="stu-sl">Enrolled</div></div>' +
+                '<div class="stu-s"><div class="stu-sv" style="color:var(--blue)">' + (sec.studentCount || 0) + '</div><div class="stu-sl">Students</div></div>' +
                 '</div>' +
                 '<div class="stu-actions">' +
-                '<button class="btn btn-p btn-xs" style="flex:1" onclick="CourseController.viewStudents(\'' + c.id + '\')">View Students</button>' +
-                '<button class="btn btn-o btn-xs" onclick="CourseController.openEdit(\'' + c.id + '\')"></button>' +
-                '<button class="btn btn-d btn-xs" onclick="CourseController.remove(\'' + c.id + '\')"></button>' +
+                '<button class="btn btn-p btn-xs" style="flex:1" onclick="SecController.viewStudents(' + sec.id + ')">View Students</button>' +
+                '<button class="btn btn-o btn-xs" onclick="SecController.openEdit(' + sec.id + ')">✏️</button>' +
+                '<button class="btn btn-d btn-xs" onclick="SecController.remove(' + sec.id + ')">✕</button>' +
                 '</div>' +
                 '</div>';
         });
-        if (!html) html = '<p style="color:var(--g400);font-size:12px;">No courses found.</p>';
-        $('#courseGrid').html(html);
+
+        $('#sectionGrid').html(html);
     },
 
-    filter: function (q) {
-        q = $.trim(q).toLowerCase();
-        var list = !q ? COURSES : $.grep(COURSES, function (c) {
-            return c.name.toLowerCase().indexOf(q) > -1 || c.code.toLowerCase().indexOf(q) > -1;
-        });
-        CourseController.render(list);
-    },
+    //  Pagination 
+    _renderPagination: function () {
+        var totalPages = Math.ceil(SecController._total / SecController._perPage);
+        if (totalPages <= 1) { $('#sectionPager').html(''); return; }
 
-    openAdd: function () {
-        $('#cAddName, #cAddCode, #cAddDesc').val('');
-        var opts = '<option value="">— Assign Teacher —</option>';
-        $.each(TEACHERS, function (i, t) {
-            opts += '<option value="' + t.id + '">' + t.name + ' (' + t.subject + ')</option>';
-        });
-        $('#cAddTeacher').html(opts);
-        $('#addCourseOverlay').addClass('show');
-    },
-
-    add: function () {
-        var name = $.trim($('#cAddName').val());
-        var code = $.trim($('#cAddCode').val()).toUpperCase();
-        var desc = $.trim($('#cAddDesc').val());
-        var teacherId = $('#cAddTeacher').val();
-        if (!name || !code) { Helpers.toast('Name and code required.', 'err'); return; }
-        var id = 'C' + ('00' + (COURSES.length + 1)).slice(-3);
-        var color = COLORS[COURSES.length % COLORS.length];
-        COURSES.push(new CourseModel({ id: id, name: name, code: code, description: desc, teacherId: teacherId, color: color }));
-        if (teacherId) {
-            $.each(TEACHERS, function (i, t) {
-                if (t.id === teacherId) { t.courseIds.push(id); return false; }
-            });
+        var html = '<div style="display:flex;gap:6px;margin-top:12px;justify-content:center;">';
+        for (var i = 1; i <= totalPages; i++) {
+            var active = i === SecController._page ? 'btn-p' : 'btn-o';
+            html += '<button class="btn ' + active + ' btn-xs" onclick="SecController.goPage(' + i + ')">' + i + '</button>';
         }
-        CourseController.closeModal('addCourseOverlay');
-        CourseController.render();
-        Helpers.toast(name + ' added!', 'ok');
+        html += '</div>';
+        $('#sectionPager').html(html);
     },
 
+    goPage: function (page) {
+        SecController._page = page;
+        SecController.load();
+    },
+
+    // View students in section 
+    viewStudents: function (sectionId) {
+        Api.get('/sections/' + sectionId + '/students', function (sec) {
+            $('#csCourseName').text(sec.name + ' (' + sec.schoolYear + ')');
+            $('#csCourseId').val(sectionId);
+
+            var students = sec.students || [];
+            var html = '';
+            $.each(students, function (i, s) {
+                var name = s.firstName + ' ' + s.lastName;
+                var color = SecController._color(s.id);
+                var init = SecController._initials(name);
+                html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--g100);">' +
+                    '<div class="s-av" style="background:' + color + ';flex-shrink:0;">' + init + '</div>' +
+                    '<div style="flex:1;">' +
+                    '<div style="font-weight:600;font-size:13px;">' + name + '</div>' +
+                    '<div style="font-size:11px;color:var(--g400);">' + (s.studentNumber || 'No ID') + '</div>' +
+                    '</div>' +
+                    '<button class="btn btn-d btn-xs" onclick="SecController.removeStudent(' + s.id + ',' + sectionId + ')">Remove</button>' +
+                    '</div>';
+            });
+
+            if (!html) html = '<p style="font-size:12px;color:var(--g400);padding:12px 0;">No students in this section.</p>';
+            $('#csCourseStudents').html(html);
+            $('#courseStudentsOverlay').addClass('show');
+        });
+    },
+
+    // Remove student from section (by deleting student)
+    removeStudent: function (studentId, sectionId) {
+        if (!confirm('Remove this student from the section?')) return;
+        Api.del('/students/' + studentId, function () {
+            SecController.viewStudents(sectionId);
+            SecController.load();
+            Helpers.toast('Student removed from section.');
+        });
+    },
+
+    // Open Add modal 
+    openAdd: function () {
+        $('#secAddName, #secAddYear, #secAddSem').val('');
+        // Load teachers into dropdown
+        Api.get('/users/role/Teacher', function (users) {
+            var opts = '<option value="">— Assign Teacher —</option>';
+            $.each(users, function (i, u) {
+                opts += '<option value="' + u.id + '">' + u.firstName + ' ' + u.lastName + '</option>';
+            });
+            $('#secAddTeacher').html(opts);
+        });
+        $('#addSectionOverlay').addClass('show');
+    },
+
+    //  Add section 
+    add: function () {
+        var name = $.trim($('#secAddName').val());
+        var year = $.trim($('#secAddYear').val());
+        var sem = $('#secAddSem').val();
+        var teacherId = parseInt($('#secAddTeacher').val());
+
+        if (!name || !year || !sem) { Helpers.toast('Fill in all fields.', 'err'); return; }
+        if (!teacherId) { Helpers.toast('Please assign a teacher.', 'err'); return; }
+
+        var body = { name: name, schoolYear: year, semester: sem, userId: teacherId };
+
+        Api.post('/sections', body, function () {
+            SecController.closeModal('addSectionOverlay');
+            SecController.load();
+            Helpers.toast(name + ' section added!', 'ok');
+            Helpers.addActivity('🏫', 'Section added', name);
+        });
+    },
+
+    //  Open Edit modal 
     openEdit: function (id) {
-        var c = null;
-        $.each(COURSES, function (i, x) { if (x.id === id) { c = x; return false; } });
-        if (!c) return;
-        $('#cEditId').val(c.id);
-        $('#cEditName').val(c.name);
-        $('#cEditCode').val(c.code);
-        $('#cEditDesc').val(c.description);
-        var opts = '<option value="">— Assign Teacher —</option>';
-        $.each(TEACHERS, function (i, t) {
-            opts += '<option value="' + t.id + '"' + (t.id === c.teacherId ? ' selected' : '') + '>' + t.name + '</option>';
+        Api.get('/sections/' + id, function (sec) {
+            $('#secEditId').val(sec.id);
+            $('#secEditName').val(sec.name);
+            $('#secEditYear').val(sec.schoolYear);
+            $('#secEditSem').val(sec.semester);
+
+            Api.get('/users/role/Teacher', function (users) {
+                var opts = '';
+                $.each(users, function (i, u) {
+                    opts += '<option value="' + u.id + '"' + (u.id === sec.userId ? ' selected' : '') + '>' +
+                        u.firstName + ' ' + u.lastName + '</option>';
+                });
+                $('#secEditTeacher').html(opts);
+            });
+
+            $('#editSectionOverlay').addClass('show');
         });
-        $('#cEditTeacher').html(opts);
-        $('#editCourseOverlay').addClass('show');
     },
 
+    //  Save edit 
     saveEdit: function () {
-        var id = $('#cEditId').val();
-        var name = $.trim($('#cEditName').val());
-        var code = $.trim($('#cEditCode').val()).toUpperCase();
-        var desc = $.trim($('#cEditDesc').val());
-        var tid = $('#cEditTeacher').val();
-        if (!name || !code) { Helpers.toast('Name and code required.', 'err'); return; }
-        $.each(COURSES, function (i, c) {
-            if (c.id === id) {
-                c.name = name; c.code = code; c.description = desc; c.teacherId = tid;
-                return false;
-            }
+        var id = parseInt($('#secEditId').val());
+        var name = $.trim($('#secEditName').val());
+        var year = $.trim($('#secEditYear').val());
+        var sem = $('#secEditSem').val();
+        var teacherId = parseInt($('#secEditTeacher').val());
+
+        if (!name || !year || !sem) { Helpers.toast('Fill in all fields.', 'err'); return; }
+
+        var body = { name: name, schoolYear: year, semester: sem, userId: teacherId || null };
+
+        Api.put('/sections/' + id, body, function () {
+            SecController.closeModal('editSectionOverlay');
+            SecController.load();
+            Helpers.toast(name + ' updated!', 'ok');
+            Helpers.addActivity('✏️', 'Section updated', name);
         });
-        CourseController.closeModal('editCourseOverlay');
-        CourseController.render();
-        Helpers.toast('Course updated!', 'ok');
     },
 
-    viewStudents: function (courseId) {
-        var c = null;
-        $.each(COURSES, function (i, x) { if (x.id === courseId) { c = x; return false; } });
-        if (!c) return;
-        var enrolled = $.grep(STUDENTS, function (s) { return s.courseId === courseId; });
-        $('#csCourseName').text(c.name + ' (' + c.code + ')');
-        $('#csCourseId').val(courseId);
-        var html = '';
-        $.each(enrolled, function (i, s) {
-            html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--g100);">' +
-                '<div class="s-av" style="background:' + s.color + ';flex-shrink:0;">' + s.initials() + '</div>' +
-                '<div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + s.name + '</div>' +
-                '<div style="font-size:11px;color:var(--g400);">' + s.id + '</div></div>' +
-                '<span class="bdg" style="background:' + s.rateColor() + ';color:#fff;font-size:10px;">' + s.rate() + '%</span>' +
-                '<button class="btn btn-d btn-xs" onclick="CourseController.unenrollStudent(\'' + s.id + '\',\'' + courseId + '\')">Unenroll</button>' +
-                '</div>';
-        });
-        if (!html) html = '<p style="font-size:12px;color:var(--g400);padding:12px 0;">No students enrolled.</p>';
-        $('#csCourseStudents').html(html);
-        $('#courseStudentsOverlay').addClass('show');
-    },
-
-    unenrollStudent: function (studentId, courseId) {
-        var s = null, cName = '';
-        $.each(STUDENTS, function (i, x) { if (x.id === studentId) { s = x; return false; } });
-        $.each(COURSES, function (i, c) { if (c.id === courseId) { cName = c.name; return false; } });
-        if (!s || !confirm('Unenroll ' + s.name + ' from ' + cName + '?')) return;
-        s.courseId = null;
-        CourseController.viewStudents(courseId);
-        CourseController.render();
-        Helpers.toast(s.name + ' unenrolled.', 'ok');
-    },
-
+    //  Delete section 
     remove: function (id) {
-        var c = null;
-        $.each(COURSES, function (i, x) { if (x.id === id) { c = x; return false; } });
-        if (!c || !confirm('Remove ' + c.name + '? Students will be unenrolled.')) return;
-        $.each(STUDENTS, function (i, s) { if (s.courseId === id) s.courseId = null; });
-        $.each(TEACHERS, function (i, t) {
-            t.courseIds = $.grep(t.courseIds, function (cid) { return cid !== id; });
+        var sec = null;
+        $.each(SecController._data, function (i, x) { if (x.id === id) { sec = x; return false; } });
+        var name = sec ? sec.name : 'this section';
+        if (!confirm('Delete ' + name + '? This will remove all enrolled students and attendance records.')) return;
+
+        Api.del('/sections/' + id, function () {
+            SecController.load();
+            Helpers.toast(name + ' deleted.');
+            Helpers.addActivity('🗑️', 'Section deleted', name);
         });
-        COURSES = $.grep(COURSES, function (x) { return x.id !== id; });
-        CourseController.render();
-        Helpers.toast(c.name + ' removed.');
     },
 
-    closeModal: function (id) { $('#' + id).removeClass('show'); }
+    closeModal: function (id) { $('#' + id).removeClass('show'); },
+
+    _initials: function (name) {
+        return $.map((name || '').split(' '), function (n) {
+            return n ? n[0].toUpperCase() : null;
+        }).slice(0, 2).join('');
+    },
+
+    _color: function (id) {
+        var colors = ['#4a6fa5', '#3a7d5c', '#7b5ea7', '#b06040', '#4a8a9a', '#5a7a3a', '#6a4a8a', '#8a3a3a', '#3a7a7a', '#7a6a2a'];
+        return colors[id % colors.length];
+    }
 };

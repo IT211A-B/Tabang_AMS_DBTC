@@ -1,63 +1,92 @@
 ﻿var DashController = {
 
-    render: function () {
-        DashController._renderStats();
-        DashController._renderChart();
-        DashController._renderAlerts();
+    _sections: [],
+
+    //  Load dashboard data
+    load: function () {
+        var today = new Date().toISOString().split('T')[0];
+
+        // Load all students for total count
+        Api.get('/students', function (students) {
+            $('#dT').text(students.length);
+
+            // Count stats from attendance records across all sections
+            var p = 0, a = 0, l = 0;
+            $.each(students, function (i, s) {
+                p += s.totalPresent || 0;
+                a += s.totalAbsent || 0;
+                l += s.totalLate || 0;
+            });
+
+            var total = students.length;
+            $('#dP').text(p);
+            $('#dA').text(a);
+            $('#dL').text(l);
+            $('#dPpct').text(total ? Math.round(p / (p + a + l || 1) * 100) + '% of class' : '—');
+            $('#dApct').text(total ? Math.round(a / (p + a + l || 1) * 100) + '% of class' : '—');
+            $('#dLpct').text(total ? Math.round(l / (p + a + l || 1) * 100) + '% of class' : '—');
+            $('#gP').text(p);
+            $('#gAL').text(a + l);
+
+            // At-risk students
+            var atRisk = $.grep(students, function (s) {
+                var tot = s.totalPresent + s.totalAbsent + s.totalLate;
+                return tot > 0 && Math.round(s.totalPresent / tot * 100) < 75;
+            });
+
+            var alertHtml = '';
+            $.each(atRisk.slice(0, 5), function (i, s) {
+                var tot = s.totalPresent + s.totalAbsent + s.totalLate;
+                var rate = tot > 0 ? Math.round(s.totalPresent / tot * 100) : 0;
+                alertHtml += '<div class="al-item al-danger">' +
+                    '<div class="al-ico">⚠️</div>' +
+                    '<div class="al-t"><strong>' + s.firstName + ' ' + s.lastName + '</strong>' +
+                    '<span>' + rate + '% rate · ' + s.totalAbsent + ' absences</span></div>' +
+                    '</div>';
+            });
+            if (!alertHtml) alertHtml = '<div class="al-item al-success"><div class="al-ico">✅</div>' +
+                '<div class="al-t"><strong>All good!</strong><span>No attendance alerts.</span></div></div>';
+            $('#dashAlerts').html(alertHtml);
+
+            // Rate glance
+            var allTot = p + a + l;
+            $('#gRate').text(allTot > 0 ? Math.round(p / allTot * 100) + '%' : '—');
+        });
+
+        // Load sections for the chart
+        Api.get('/sections?pageSize=100', function (data) {
+            DashController._sections = data.data || data;
+            DashController._renderSectionStats();
+        });
+
+        // Activity log
         DashController._renderActivity();
     },
 
-    _renderStats: function () {
-        var recs = [];
-        $.each(STATE.attendance, function (k, r) { recs.push(r); });
-        var total = STUDENTS.length;
-        var p = 0, a = 0, l = 0;
-        $.each(recs, function (i, r) {
-            if (r.status === 'P') p++;
-            else if (r.status === 'A') a++;
-            else if (r.status === 'L') l++;
-        });
-        var rate = total > 0 ? Math.round(p / total * 100) : 0;
-        $('#dT').text(total); $('#dP').text(p); $('#dA').text(a); $('#dL').text(l);
-        $('#dPpct').text(total ? rate + '% of class' : '—');
-        $('#dApct').text(total ? Math.round(a / total * 100) + '% of class' : '—');
-        $('#dLpct').text(total ? Math.round(l / total * 100) + '% of class' : '—');
-        $('#gRate').text(recs.length ? rate + '%' : '—');
-        $('#gP').text(p); $('#gAL').text(a + l);
-    },
+    //  Section stats bar chart 
+    _renderSectionStats: function () {
+        if (!DashController._sections.length) return;
 
-    _renderChart: function () {
-        var bars = '', labels = '';
-        $.each(STATE.weeklyData, function (i, d) {
-            bars += '<div class="bc-g"><div class="bc-b" style="background:var(--green);height:' + d.p + '%"></div></div>' +
-                '<div class="bc-g"><div class="bc-b" style="background:var(--red);height:' + d.a + '%"></div></div>' +
-                '<div class="bc-g"><div class="bc-b" style="background:var(--orange);height:' + d.l + '%"></div></div>';
-            if (i < STATE.weeklyData.length - 1) bars += '<div class="bc-divider"></div>';
-            labels += '<span class="bc-lbl">' + d.day + '</span>';
+        var bars = '';
+        var labels = '';
+        var max = 0;
+
+        // Find max student count for scaling
+        $.each(DashController._sections, function (i, sec) {
+            if ((sec.studentCount || 0) > max) max = sec.studentCount;
         });
+
+        $.each(DashController._sections.slice(0, 5), function (i, sec) {
+            var pct = max > 0 ? Math.round((sec.studentCount || 0) / max * 100) : 0;
+            bars += '<div class="bc-g"><div class="bc-b" style="background:var(--blue);height:' + pct + '%"></div></div>';
+            labels += '<span class="bc-lbl">' + (sec.name.length > 8 ? sec.name.substring(0, 8) + '…' : sec.name) + '</span>';
+        });
+
         $('#barchart').html(bars);
         $('#barlabels').html(labels);
     },
 
-    _renderAlerts: function () {
-        var html = '';
-        $.each(STUDENTS, function (i, s) {
-            if (s.isAtRisk()) {
-                html += '<div class="al-item al-danger"><div class="al-ico"></div>' +
-                    '<div class="al-t"><strong>' + s.name + '</strong><span>' + s.rate() + '% · ' + s.a + ' absences</span></div></div>';
-            }
-        });
-        $.each(STUDENTS, function (i, s) {
-            if (s.l >= 3 && !s.isAtRisk()) {
-                html += '<div class="al-item al-warn"><div class="al-ico"></div>' +
-                    '<div class="al-t"><strong>' + s.name + '</strong><span>Late ' + s.l + 'x this period</span></div></div>';
-            }
-        });
-        if (!html) html = '<div class="al-item al-success"><div class="al-ico"></div>' +
-            '<div class="al-t"><strong>All good!</strong><span>No attendance alerts.</span></div></div>';
-        $('#dashAlerts').html(html);
-    },
-
+    // Activity log 
     _renderActivity: function () {
         if (!STATE.activityLog.length) {
             $('#actLog').html('<p style="font-size:11px;color:var(--g400);">No recent activity.</p>');
@@ -72,5 +101,10 @@
                 '</div>';
         });
         $('#actLog').html(html);
+    },
+
+    //Refresh activity (called after any action) 
+    refreshActivity: function () {
+        DashController._renderActivity();
     }
 };
