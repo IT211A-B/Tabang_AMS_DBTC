@@ -1,158 +1,144 @@
-﻿
-var TeacherController = {
+﻿var UserController = {
 
+    _data: [],
+
+    //Load all users
+    load: function () {
+        $('#userGrid').html('<p style="color:var(--g400);font-size:12px;">Loading users...</p>');
+
+        Api.get('/users', function (data) {
+            UserController._data = data;
+            UserController.render(data);
+        }, function (err) {
+            $('#userGrid').html('<p style="color:var(--red);font-size:12px;">Failed to load: ' + err + '</p>');
+        });
+    },
+
+    //Render user cards
     render: function (list) {
-        list = list || TEACHERS;
+        if (!list || !list.length) {
+            $('#userGrid').html('<p style="color:var(--g400);font-size:12px;">No users found.</p>');
+            return;
+        }
+
         var html = '';
-        $.each(list, function (i, t) {
-            var studentCount = 0;
-            var courseNames = '';
-            $.each(t.courseIds, function (j, cid) {
-                $.each(COURSES, function (k, c) {
-                    if (c.id === cid) {
-                        courseNames += '<span class="bdg bdg-b" style="font-size:10px;margin:1px 2px;">' + c.code + '</span>';
-                        return false;
-                    }
-                });
-                $.each(STUDENTS, function (k, s) { if (s.courseId === cid) studentCount++; });
-            });
-            if (!courseNames) courseNames = '<span style="font-size:11px;color:var(--g400);">No courses assigned</span>';
+        $.each(list, function (i, u) {
+            var fullName = u.firstName + ' ' + u.lastName;
+            var initials = UserController._initials(fullName);
+            var color = u.role === 'Admin' ? '#b06040' : '#4a6fa5';
+            var roleBadge = u.role === 'Admin'
+                ? '<span class="bdg bdg-a">Admin</span>'
+                : '<span class="bdg bdg-p">Teacher</span>';
 
             html += '<div class="stu-card">' +
                 '<div class="stu-top">' +
-                '<div class="stu-av" style="background:' + t.color + '">' + t.initials() + '</div>' +
-                '<div><div class="stu-nm">' + t.name + '</div><div class="stu-sid">' + t.subject + '</div></div>' +
+                '<div class="stu-av" style="background:' + color + '">' + initials + '</div>' +
+                '<div>' +
+                '<div class="stu-nm">' + fullName + '</div>' +
+                '<div class="stu-sid">' + u.email + '</div>' +
                 '</div>' +
-                '<div style="font-size:11px;color:var(--g500);margin:4px 0 6px;">✉️ ' + t.email + '</div>' +
-                '<div style="margin-bottom:8px;">' + courseNames + '</div>' +
-                '<div class="stu-stats">' +
-                '<div class="stu-s"><div class="stu-sv" style="color:var(--blue)">' + t.courseIds.length + '</div><div class="stu-sl">Courses</div></div>' +
-                '<div class="stu-s"><div class="stu-sv" style="color:var(--green)">' + studentCount + '</div><div class="stu-sl">Students</div></div>' +
                 '</div>' +
+                '<div style="margin:8px 0;">' + roleBadge + '</div>' +
                 '<div class="stu-actions">' +
-                '<button class="btn btn-p btn-xs" style="flex:1" onclick="TeacherController.openEnroll(\'' + t.id + '\')">Enroll Student</button>' +
-                '<button class="btn btn-o btn-xs" onclick="TeacherController.openEdit(\'' + t.id + '\')">✏️</button>' +
-                '<button class="btn btn-d btn-xs" onclick="TeacherController.remove(\'' + t.id + '\')">✕</button>' +
+                '<button class="btn btn-o btn-xs" style="flex:1" onclick="UserController.openEdit(' + u.id + ')">✏️ Edit</button>' +
+                '<button class="btn btn-d btn-xs" onclick="UserController.remove(' + u.id + ')">✕</button>' +
                 '</div>' +
                 '</div>';
         });
-        if (!html) html = '<p style="color:var(--g400);font-size:12px;">No teachers found.</p>';
-        $('#teacherGrid').html(html);
+
+        $('#userGrid').html(html);
     },
 
-    filter: function (q) {
-        q = $.trim(q).toLowerCase();
-        var list = !q ? TEACHERS : $.grep(TEACHERS, function (t) {
-            return t.name.toLowerCase().indexOf(q) > -1 || t.subject.toLowerCase().indexOf(q) > -1;
-        });
-        TeacherController.render(list);
+    //Filter by role
+    filterByRole: function (role) {
+        if (!role) { UserController.render(UserController._data); return; }
+        var filtered = $.grep(UserController._data, function (u) { return u.role === role; });
+        UserController.render(filtered);
     },
 
+    //Open Add modal
     openAdd: function () {
-        $('#tAddName, #tAddEmail, #tAddSubject').val('');
-        $('#addTeacherOverlay').addClass('show');
+        $('#uAddFn, #uAddLn, #uAddEmail, #uAddPass').val('');
+        $('#uAddRole').val('Teacher');
+        $('#addUserOverlay').addClass('show');
     },
 
+    //Add user 
     add: function () {
-        var name = $.trim($('#tAddName').val());
-        var email = $.trim($('#tAddEmail').val());
-        var subject = $.trim($('#tAddSubject').val());
-        if (!name || !email || !subject) { Helpers.toast('Fill in all fields.', 'err'); return; }
+        var fn = $.trim($('#uAddFn').val());
+        var ln = $.trim($('#uAddLn').val());
+        var email = $.trim($('#uAddEmail').val());
+        var pass = $('#uAddPass').val();
+        var role = $('#uAddRole').val();
+
+        if (!fn || !ln || !email || !pass) { Helpers.toast('Fill in all fields.', 'err'); return; }
         if (!Helpers.isValidEmail(email)) { Helpers.toast('Invalid email.', 'err'); return; }
-        var exists = false;
-        $.each(TEACHERS, function (i, t) { if (t.email === email) { exists = true; return false; } });
-        if (exists) { Helpers.toast('Email already exists.', 'err'); return; }
-        var id = 'T' + ('00' + (TEACHERS.length + 1)).slice(-3);
-        var color = COLORS[TEACHERS.length % COLORS.length];
-        TEACHERS.push(new TeacherModel({ id: id, name: name, email: email, subject: subject, color: color }));
-        TeacherController.closeModal('addTeacherOverlay');
-        TeacherController.render();
-        Helpers.toast(name + ' added!', 'ok');
+        if (pass.length < 6) { Helpers.toast('Password min 6 characters.', 'err'); return; }
+
+        var body = { firstName: fn, lastName: ln, email: email, password: pass, role: role };
+
+        Api.post('/users', body, function () {
+            UserController.closeModal('addUserOverlay');
+            UserController.load();
+            Helpers.toast(fn + ' ' + ln + ' added!', 'ok');
+            Helpers.addActivity( 'User added', fn + ' ' + ln + ' (' + role + ')');
+        });
     },
 
+    //Open Edit modal
     openEdit: function (id) {
-        var t = null;
-        $.each(TEACHERS, function (i, x) { if (x.id === id) { t = x; return false; } });
-        if (!t) return;
-        $('#tEditId').val(t.id);
-        $('#tEditName').val(t.name);
-        $('#tEditEmail').val(t.email);
-        $('#tEditSubject').val(t.subject);
-        $('#editTeacherOverlay').addClass('show');
+        Api.get('/users/' + id, function (u) {
+            $('#uEditId').val(u.id);
+            $('#uEditFn').val(u.firstName);
+            $('#uEditLn').val(u.lastName);
+            $('#uEditEmail').val(u.email);
+            $('#uEditPass').val('');
+            $('#uEditRole').val(u.role);
+            $('#editUserOverlay').addClass('show');
+        });
     },
 
+    //Save edit 
     saveEdit: function () {
-        var id = $('#tEditId').val();
-        var name = $.trim($('#tEditName').val());
-        var email = $.trim($('#tEditEmail').val());
-        var subject = $.trim($('#tEditSubject').val());
-        if (!name || !email || !subject) { Helpers.toast('Fill in all fields.', 'err'); return; }
-        $.each(TEACHERS, function (i, t) {
-            if (t.id === id) { t.name = name; t.email = email; t.subject = subject; return false; }
+        var id = parseInt($('#uEditId').val());
+        var fn = $.trim($('#uEditFn').val());
+        var ln = $.trim($('#uEditLn').val());
+        var email = $.trim($('#uEditEmail').val());
+        var pass = $('#uEditPass').val();
+        var role = $('#uEditRole').val();
+
+        if (!fn || !ln || !email) { Helpers.toast('Fill in all fields.', 'err'); return; }
+
+        var body = { firstName: fn, lastName: ln, email: email, role: role };
+        if (pass) body.password = pass;
+
+        Api.put('/users/' + id, body, function () {
+            UserController.closeModal('editUserOverlay');
+            UserController.load();
+            Helpers.toast(fn + ' ' + ln + ' updated!', 'ok');
+            Helpers.addActivity( 'User updated', fn + ' ' + ln);
         });
-        TeacherController.closeModal('editTeacherOverlay');
-        TeacherController.render();
-        Helpers.toast('Teacher updated!', 'ok');
     },
 
-    openEnroll: function (teacherId) {
-        $('#enrollTeacherId').val(teacherId);
-        var t = null;
-        $.each(TEACHERS, function (i, x) { if (x.id === teacherId) { t = x; return false; } });
-        if (!t) return;
-        var courseOpts = '<option value="">— Select course —</option>';
-        $.each(t.courseIds, function (i, cid) {
-            $.each(COURSES, function (j, c) {
-                if (c.id === cid) { courseOpts += '<option value="' + c.id + '">' + c.name + '</option>'; return false; }
-            });
-        });
-        $('#enrollCourseId').html(courseOpts);
-        var stuOpts = '<option value="">— Select student —</option>';
-        $.each(STUDENTS, function (i, s) {
-            var inTeacher = false;
-            $.each(t.courseIds, function (j, cid) { if (s.courseId === cid) { inTeacher = true; return false; } });
-            if (!inTeacher) {
-                stuOpts += '<option value="' + s.id + '">' + s.name + ' (' + s.id + ')' +
-                    (s.courseId ? ' — in another course' : ' — unenrolled') + '</option>';
-            }
-        });
-        $('#enrollStudentId').html(stuOpts);
-        $('#enrollTeacherName').text(t.name);
-        $('#enrollStudentOverlay').addClass('show');
-    },
-
-    enroll: function () {
-        var studentId = $('#enrollStudentId').val();
-        var courseId = $('#enrollCourseId').val();
-        if (!studentId) { Helpers.toast('Select a student.', 'err'); return; }
-        if (!courseId) { Helpers.toast('Select a course.', 'err'); return; }
-        var s = null, cName = '';
-        $.each(STUDENTS, function (i, x) { if (x.id === studentId) { s = x; return false; } });
-        $.each(COURSES, function (i, c) { if (c.id === courseId) { cName = c.name; return false; } });
-        if (!s) return;
-        s.courseId = courseId;
-        TeacherController.closeModal('enrollStudentOverlay');
-        TeacherController.render();
-        Helpers.toast(s.name + ' enrolled in ' + cName + '!', 'ok');
-    },
-
-    unenroll: function (studentId) {
-        var s = null;
-        $.each(STUDENTS, function (i, x) { if (x.id === studentId) { s = x; return false; } });
-        if (!s || !confirm('Unenroll ' + s.name + '?')) return;
-        s.courseId = null;
-        TeacherController.render();
-        Helpers.toast(s.name + ' unenrolled.', 'ok');
-    },
-
+    // Delete user
     remove: function (id) {
-        var t = null;
-        $.each(TEACHERS, function (i, x) { if (x.id === id) { t = x; return false; } });
-        if (!t || !confirm('Remove ' + t.name + '?')) return;
-        TEACHERS = $.grep(TEACHERS, function (x) { return x.id !== id; });
-        TeacherController.render();
-        Helpers.toast(t.name + ' removed.');
+        var u = null;
+        $.each(UserController._data, function (i, x) { if (x.id === id) { u = x; return false; } });
+        var name = u ? (u.firstName + ' ' + u.lastName) : 'this user';
+        if (!confirm('Delete ' + name + '?')) return;
+
+        Api.del('/users/' + id, function () {
+            UserController.load();
+            Helpers.toast(name + ' deleted.');
+            Helpers.addActivity( 'User deleted', name);
+        });
     },
 
-    closeModal: function (id) { $('#' + id).removeClass('show'); }
+    closeModal: function (id) { $('#' + id).removeClass('show'); },
+
+    _initials: function (name) {
+        return $.map((name || '').split(' '), function (n) {
+            return n ? n[0].toUpperCase() : null;
+        }).slice(0, 2).join('');
+    }
 };
